@@ -29,6 +29,10 @@ User.init(
         isEmail: { msg: "Email must be a valid email address" },
       },
     },
+    password: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+    },
   },
   {
     sequelize,

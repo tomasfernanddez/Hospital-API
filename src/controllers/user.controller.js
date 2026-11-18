@@ -1,7 +1,10 @@
+import bcrypt from "bcrypt";
 import { Op } from "sequelize";
 import { User } from "../models/user.model.js";
 import { toUserResponse } from "../dtos/user.dto.js";
 import { AppError } from "../errors/app-error.js";
+
+const SALT_ROUNDS = 12;
 
 const userNotFound = () =>
   new AppError("User not found", { status: 404, code: "USER_NOT_FOUND" });
@@ -45,7 +48,12 @@ export const getById = async (req, res) => {
 };
 
 export const create = async (req, res) => {
-  const user = await User.create(req.dto);
+  const { password, ...data } = req.dto;
+
+  const user = await User.create({
+    ...data,
+    password: await bcrypt.hash(password, SALT_ROUNDS),
+  });
 
   res
     .status(201)
@@ -60,7 +68,13 @@ export const update = async (req, res) => {
     throw userNotFound();
   }
 
-  await user.update(req.dto);
+  const { password, ...data } = req.dto;
+
+  if (password !== undefined) {
+    data.password = await bcrypt.hash(password, SALT_ROUNDS);
+  }
+
+  await user.update(data);
 
   res.json({ data: toUserResponse(user) });
 };
