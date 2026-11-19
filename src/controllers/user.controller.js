@@ -90,3 +90,15 @@ export const remove = async (req, res) => {
 
   res.status(204).send();
 };
+
+export const assignRole = async (req, res) => {
+  const user = await User.findByPk(req.userId);
+
+  if (!user) {
+    throw userNotFound();
+  }
+
+  await user.update({ role: req.dto.role });
+
+  res.json({ data: toUserResponse(user) });
+};

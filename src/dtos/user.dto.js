@@ -4,6 +4,13 @@ import * as yup from "yup";
 const name = yup.string().trim().min(2).max(120);
 const email = yup.string().trim().lowercase().email().max(255);
 const password = yup.string().trim().min(8).max(72);
+const role = yup
+  .string()
+  .oneOf(["ROLE_USER", "ROLE_ADMIN"], "Role must be ROLE_USER or ROLE_ADMIN");
+
+export const assignRoleDto = yup
+  .object({ role: role.required() })
+  .noUnknown(true, "Unknown fields are not allowed");
 
 // Crear: los tres campos son obligatorios.
 export const createUserDto = yup
@@ -30,5 +37,6 @@ export function toUserResponse(user) {
     id: user.id,
     name: user.name,
     email: user.email,
+    role: user.role,
   };
 }

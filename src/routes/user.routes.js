@@ -2,7 +2,12 @@ import { Router } from "express";
 import * as controller from "../controllers/user.controller.js";
 import { validateBody } from "../middlewares/validate-body.middleware.js";
 import { validateUserId } from "../middlewares/validate-id.middleware.js";
-import { createUserDto, updateUserDto } from "../dtos/user.dto.js";
+import { requireRole } from "../middlewares/require-role.middleware.js";
+import {
+  createUserDto,
+  updateUserDto,
+  assignRoleDto,
+} from "../dtos/user.dto.js";
 
 export const userRouter = Router();
 
@@ -18,3 +23,10 @@ userRouter.patch(
   controller.update,
 );
 userRouter.delete("/:id", validateUserId, controller.remove);
+userRouter.patch(
+  "/:id/role",
+  requireRole("ROLE_ADMIN"),
+  validateUserId,
+  validateBody(assignRoleDto),
+  controller.assignRole,
+);

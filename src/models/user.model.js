@@ -33,6 +33,14 @@ User.init(
       type: DataTypes.STRING(255),
       allowNull: false,
     },
+    role: {
+      type: "user_role",
+      allowNull: false,
+      defaultValue: "ROLE_USER",
+      validate: {
+        isIn: { args: [["ROLE_USER", "ROLE_ADMIN"]], msg: "Invalid role" },
+      },
+    }
   },
   {
     sequelize,
