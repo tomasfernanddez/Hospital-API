@@ -1,0 +1,3584 @@
+{
+  "_": {
+    "postman_id": "f9c91876-e615-4685-b734-fe8c7a99fd35"
+  },
+  "item": [
+    {
+      "id": "b8e36600-1e70-4344-901f-c979c3563b16",
+      "name": "Health",
+      "item": [
+        {
+          "id": "5274347a-5f6a-4fb6-b6b0-c655160827bc",
+          "name": "01 - Health check",
+          "request": {
+            "description": {
+              "content": "01 - Health check",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "health"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "21ebf619-48d4-4c93-9f55-704b3c5ca899",
+                "type": "text/javascript",
+                "exec": [
+                  "const nonce = String(Date.now()).slice(-8) + String(Math.floor(Math.random()*1000)).padStart(3,\"0\");",
+                  "pm.collectionVariables.set(\"runId\",nonce);",
+                  "pm.collectionVariables.set(\"docNumber\",String(10000000 + Math.floor(Math.random()*89999999)));",
+                  "pm.collectionVariables.set(\"doctorLicense\",\"MN-\"+nonce);",
+                  "pm.collectionVariables.set(\"nurseLicense\",\"EN-\"+nonce);",
+                  "pm.collectionVariables.set(\"testEmail\",\"hospital.postman.\"+nonce+\"@example.test\");",
+                  "pm.collectionVariables.set(\"testPassword\",\"Demo_\"+nonce+\"!\");",
+                  "pm.collectionVariables.set(\"appointmentDate\",\"2026-12-10\");",
+                  "pm.collectionVariables.set(\"appointmentAt\",\"2026-12-10T14:30:00-03:00\");"
+                ],
+                "_lastExecutionId": "04142682-79f0-4dc9-9e36-17cfce376869"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "0687260c-1fbe-4cc6-829f-aa6b704885ed",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Health ok\", () => pm.expect(pm.response.json().status).to.eql(\"ok\"));"
+                ],
+                "_lastExecutionId": "f335fc31-5021-42fc-b990-4c1caa17d80d"
+              }
+            }
+          ]
+        }
+      ],
+      "event": []
+    },
+    {
+      "id": "56d6a41a-e1d4-4c4d-b172-4e268fe91ded",
+      "name": "Specialties",
+      "item": [
+        {
+          "id": "cb69a032-12ea-450b-9bbb-6039dd805d4c",
+          "name": "01 - Listar especialidades",
+          "request": {
+            "description": {
+              "content": "01 - Listar especialidades",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "specialties"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "4ab94d9b-2554-4c8c-a8c9-cad536a588a6",
+                "type": "text/javascript",
+                "exec": [
+                  "(() => {",
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data=pm.response.json().data;",
+                  "pm.test(\"Catalogo no vacio (ejecutar db:seed)\",()=>pm.expect(data).to.be.an(\"array\").that.is.not.empty);",
+                  "if(data.length)pm.collectionVariables.set(\"specialtyId\",data[0].id);",
+                  "})();"
+                ],
+                "_lastExecutionId": "3bc49d5a-5624-456e-8828-5a6e4d088b50"
+              }
+            }
+          ]
+        },
+        {
+          "id": "119c14c9-1e54-4768-9f1d-3e4baa3121bb",
+          "name": "02 - Obtener especialidad por ID",
+          "request": {
+            "description": {
+              "content": "02 - Obtener especialidad por ID",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "specialties",
+                "{{specialtyId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "09b12355-e6b0-490d-b58b-149dfc9ed9ed",
+                "type": "text/javascript",
+                "exec": [
+                  "(() => {",
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"name\");});",
+                  "})();"
+                ],
+                "_lastExecutionId": "777d9ac9-ad72-464e-a12c-e9aaaacfb09a"
+              }
+            }
+          ]
+        },
+        {
+          "id": "25c6d9aa-c7a7-41ea-a870-50e9b4b13468",
+          "name": "03 - ID inexistente (404)",
+          "request": {
+            "description": {
+              "content": "03 - ID inexistente (404)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "specialties",
+                "2147483647"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [],
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "72f38532-dec0-4d74-bed6-192ea394f9e7",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ],
+                "_lastExecutionId": "f0180c51-2d54-48f3-883c-1cf16069e6b6"
+              }
+            }
+          ]
+        },
+        {
+          "id": "03813a5c-a307-4b79-b2b8-5f0df32f5f21",
+          "name": "04 - ID invalido (400)",
+          "request": {
+            "description": {
+              "content": "04 - ID invalido (400)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "specialties",
+                "abc"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [],
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "43e3d9ff-5175-426a-a359-904049b6440e",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ],
+                "_lastExecutionId": "c6c57513-c61f-4b4e-b510-8b5144a76b32"
+              }
+            }
+          ]
+        }
+      ],
+      "event": []
+    },
+    {
+      "id": "3cd181f4-c2d3-47e9-a233-5cd5b4c2a343",
+      "name": "Patients",
+      "item": [
+        {
+          "id": "88452f1b-0f46-4594-9364-9ec0241962e1",
+          "name": "01 - Crear paciente (201)",
+          "request": {
+            "description": {
+              "content": "01 - Crear paciente (201)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "patients"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Ada\",\n  \"lastName\": \"Lovelace\",\n  \"documentNumber\": \"{{docNumber}}\",\n  \"birthDate\": \"1985-12-10\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "305b4569-4762-4e61-99b6-aa627cea7fe4",
+                "type": "text/javascript",
+                "exec": [
+                  "(() => {",
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"firstName\"); pm.expect(data).to.have.property(\"lastName\"); pm.expect(data).to.have.property(\"documentNumber\"); pm.expect(data).to.have.property(\"birthDate\");});",
+                  "pm.collectionVariables.set(\"patientId\", data.id);",
+                  "pm.test(\"Location\",()=>pm.expect(pm.response.headers.get(\"Location\")).to.match(/^\\/api\\/patients\\/\\d+$/));",
+                  "})();"
+                ],
+                "_lastExecutionId": "42d06a41-8e8c-4f4a-b204-a2cfbdc3a0ec"
+              }
+            }
+          ]
+        },
+        {
+          "id": "9c5464be-1123-4896-a0c4-c931735343fe",
+          "name": "02 - Obtener paciente (200)",
+          "request": {
+            "description": {
+              "content": "02 - Obtener paciente (200)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "patients",
+                "{{patientId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "45999476-8f7d-474e-b931-095d488ffc1e",
+                "type": "text/javascript",
+                "exec": [
+                  "(() => {",
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"firstName\"); pm.expect(data).to.have.property(\"lastName\"); pm.expect(data).to.have.property(\"documentNumber\"); pm.expect(data).to.have.property(\"birthDate\");});",
+                  "})();"
+                ],
+                "_lastExecutionId": "1426a084-c6bb-4daf-92f7-cd27406cf999"
+              }
+            }
+          ]
+        },
+        {
+          "id": "6c8af350-4d59-4975-8996-8e344dd11e90",
+          "name": "03 - Actualizar paciente (200)",
+          "request": {
+            "description": {
+              "content": "03 - Actualizar paciente (200)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "patients",
+                "{{patientId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "PATCH",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lastName\": \"Lovelace-Test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "3873be30-71d5-4d22-9239-038d4960083c",
+                "type": "text/javascript",
+                "exec": [
+                  "(() => {",
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"lastName\");});",
+                  "})();"
+                ],
+                "_lastExecutionId": "d5bd03e1-0174-4fbd-bfc4-9be73114d44d"
+              }
+            }
+          ]
+        },
+        {
+          "id": "b61b0c29-8fb6-4fee-a424-dc290f37e7c4",
+          "name": "04 - Buscar paciente por apellido",
+          "request": {
+            "description": {
+              "content": "04 - Buscar paciente por apellido",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "patients",
+                "search"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "key": "keywords",
+                  "value": "Lovelace"
+                }
+              ],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "53329d6c-c2de-441d-810f-5b46a4548a06",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Coleccion\",()=>pm.expect(pm.response.json().data).to.be.an(\"array\"));"
+                ],
+                "_lastExecutionId": "8787b8b6-5866-4639-b8b5-4c99d5c31836"
+              }
+            }
+          ]
+        },
+        {
+          "id": "4d244799-981c-46c7-901b-bd6b7c3238c5",
+          "name": "05 - Listar pacientes",
+          "request": {
+            "description": {
+              "content": "05 - Listar pacientes",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "patients"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "ab860fdf-723e-41bc-a0a2-1c68961b3590",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Coleccion\",()=>pm.expect(pm.response.json().data).to.be.an(\"array\"));"
+                ],
+                "_lastExecutionId": "85c38ddb-421b-41f5-91dc-1b48ec5ba4fc"
+              }
+            }
+          ]
+        },
+        {
+          "id": "c545b06b-1dca-4b5e-b868-e3f15b085b3b",
+          "name": "06 - Documento duplicado (409)",
+          "request": {
+            "description": {
+              "content": "06 - Documento duplicado (409)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "patients"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Ada\",\n  \"lastName\": \"Lovelace\",\n  \"documentNumber\": \"{{docNumber}}\",\n  \"birthDate\": \"1985-12-10\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "4b607991-c53c-4334-abd0-5de02157bef2",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo DOCUMENT_NUMBER_TAKEN\", () => pm.expect(pm.response.json().error.code).to.eql(\"DOCUMENT_NUMBER_TAKEN\"));"
+                ],
+                "_lastExecutionId": "06e891fe-1ba8-4183-a826-fd881f8200a0"
+              }
+            }
+          ]
+        },
+        {
+          "id": "f4f40640-a57e-4587-88c5-8f494d38cacb",
+          "name": "07 - Body invalido (400)",
+          "request": {
+            "description": {
+              "content": "07 - Body invalido (400)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "patients"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"A\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "08990c6e-4b89-42ea-9e2b-0bd170ec8e81",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo VALIDATION_ERROR\", () => pm.expect(pm.response.json().error.code).to.eql(\"VALIDATION_ERROR\"));"
+                ],
+                "_lastExecutionId": "fbff40b3-1c43-4e5a-a476-a05cda392253"
+              }
+            }
+          ]
+        },
+        {
+          "id": "7969c382-5a65-4fc6-a502-b2142359f64f",
+          "name": "08 - Campo desconocido (400)",
+          "request": {
+            "description": {
+              "content": "08 - Campo desconocido (400)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "patients"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Ada\",\n  \"lastName\": \"Lovelace\",\n  \"documentNumber\": \"{{docNumber}}\",\n  \"birthDate\": \"1985-12-10\",\n  \"unexpectedField\": \"x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "478c340f-2911-4e12-a633-ca29c6614724",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo VALIDATION_ERROR\", () => pm.expect(pm.response.json().error.code).to.eql(\"VALIDATION_ERROR\"));"
+                ],
+                "_lastExecutionId": "8f272fee-2daf-4d64-804e-31ae37145886"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ade971fd-4b5e-4fec-86ac-e72083555a48",
+          "name": "09 - Paciente inexistente (404)",
+          "request": {
+            "description": {
+              "content": "09 - Paciente inexistente (404)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "patients",
+                "2147483647"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [],
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "3c1a2831-9e87-41cf-a343-4b78ce4e516e",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ],
+                "_lastExecutionId": "f6308f4a-00ab-42bd-8d19-5929d07f7f98"
+              }
+            }
+          ]
+        },
+        {
+          "id": "c7612d95-ed1a-483a-a338-345665f05674",
+          "name": "10 - ID invalido (400)",
+          "request": {
+            "description": {
+              "content": "10 - ID invalido (400)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "patients",
+                "abc"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [],
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "e9dcf618-6f13-44a3-acd4-e345088e9b44",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ],
+                "_lastExecutionId": "aea846e9-6464-4290-8b99-67cf15e622b9"
+              }
+            }
+          ]
+        },
+        {
+          "id": "487eb433-b7ae-44e7-acf0-278647f48066",
+          "name": "11 - PATCH vacio (400)",
+          "request": {
+            "description": {
+              "content": "11 - PATCH vacio (400)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "patients",
+                "{{patientId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "PATCH",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "cf9dac84-f1e3-458e-b295-fc2ca974abe4",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo VALIDATION_ERROR\", () => pm.expect(pm.response.json().error.code).to.eql(\"VALIDATION_ERROR\"));"
+                ],
+                "_lastExecutionId": "b6b77c89-95df-4291-a5f0-6a858f3fbd52"
+              }
+            }
+          ]
+        }
+      ],
+      "event": []
+    },
+    {
+      "id": "60532855-a775-45b5-98f3-18bf70546eca",
+      "name": "Doctors",
+      "item": [
+        {
+          "id": "421c36d1-1210-486a-9abd-c86370150683",
+          "name": "01 - Crear medico (201)",
+          "request": {
+            "description": {
+              "content": "01 - Crear medico (201)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "doctors"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Gregory\",\n  \"lastName\": \"House\",\n  \"licenseNumber\": \"{{doctorLicense}}\",\n  \"specialtyId\": {{specialtyId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "ed57526e-5a13-47bf-879e-18f352b09223",
+                "type": "text/javascript",
+                "exec": [
+                  "(() => {",
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"firstName\"); pm.expect(data).to.have.property(\"lastName\"); pm.expect(data).to.have.property(\"licenseNumber\"); pm.expect(data).to.have.property(\"specialty\");});",
+                  "pm.collectionVariables.set(\"doctorId\", data.id);",
+                  "pm.test(\"Especialidad anidada\",()=>pm.expect(pm.response.json().data.specialty).to.have.property(\"id\"));",
+                  "})();"
+                ],
+                "_lastExecutionId": "eeafc195-d87d-467d-8a2c-df5507f70e70"
+              }
+            }
+          ]
+        },
+        {
+          "id": "00d19f28-a7f8-4dee-be0d-e001ef827764",
+          "name": "02 - Obtener medico",
+          "request": {
+            "description": {
+              "content": "02 - Obtener medico",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "doctors",
+                "{{doctorId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "32a8153a-90aa-45f8-84ef-9dc21861f53f",
+                "type": "text/javascript",
+                "exec": [
+                  "(() => {",
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"specialty\");});",
+                  "})();"
+                ],
+                "_lastExecutionId": "cff66f53-2965-4ba1-950d-31fbebeab14a"
+              }
+            }
+          ]
+        },
+        {
+          "id": "adf8ae8b-9995-4c7a-a7f9-ad27658dab76",
+          "name": "03 - Actualizar medico",
+          "request": {
+            "description": {
+              "content": "03 - Actualizar medico",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "doctors",
+                "{{doctorId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "PATCH",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lastName\": \"House-Test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "0d9dd01d-f189-4e79-8929-bf6e6209bd32",
+                "type": "text/javascript",
+                "exec": [
+                  "(() => {",
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"lastName\");});",
+                  "})();"
+                ],
+                "_lastExecutionId": "92683eaf-f207-4f54-bbfb-5436b1c7fe76"
+              }
+            }
+          ]
+        },
+        {
+          "id": "5b7f7389-c8f9-48bc-aea3-76773804f7ac",
+          "name": "04 - Buscar por apellido",
+          "request": {
+            "description": {
+              "content": "04 - Buscar por apellido",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "doctors",
+                "search"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "key": "keywords",
+                  "value": "House"
+                }
+              ],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "6f39e7cf-caea-46c7-bf9b-443b6ed8dbb3",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Coleccion\",()=>pm.expect(pm.response.json().data).to.be.an(\"array\"));"
+                ],
+                "_lastExecutionId": "f8f3d3ca-9de5-4c1f-9c43-74f8cc9eb6f5"
+              }
+            }
+          ]
+        },
+        {
+          "id": "c42e909b-368e-48de-8783-c01e9b549dc3",
+          "name": "05 - Listar medicos",
+          "request": {
+            "description": {
+              "content": "05 - Listar medicos",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "doctors"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "9d062fbd-137c-479e-b8a6-ebe6c9c8d334",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Coleccion\",()=>pm.expect(pm.response.json().data).to.be.an(\"array\"));"
+                ],
+                "_lastExecutionId": "aaf8efc2-e677-4522-910f-21c4e0059a27"
+              }
+            }
+          ]
+        },
+        {
+          "id": "f682b9e4-52cb-438e-b124-c75683b05977",
+          "name": "06 - Matricula duplicada (409)",
+          "request": {
+            "description": {
+              "content": "06 - Matricula duplicada (409)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "doctors"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Gregory\",\n  \"lastName\": \"House\",\n  \"licenseNumber\": \"{{doctorLicense}}\",\n  \"specialtyId\": {{specialtyId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "ab03d963-9049-4945-baa5-f02cb273105e",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo LICENSE_NUMBER_TAKEN\", () => pm.expect(pm.response.json().error.code).to.eql(\"LICENSE_NUMBER_TAKEN\"));"
+                ],
+                "_lastExecutionId": "0c6bb8cb-9117-4360-a188-798d4fe5beb6"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ec52361e-66b8-48c9-8663-b9e1356c328d",
+          "name": "07 - Especialidad inexistente (400)",
+          "request": {
+            "description": {
+              "content": "07 - Especialidad inexistente (400)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "doctors"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Gregory\",\n  \"lastName\": \"House\",\n  \"licenseNumber\": \"{{doctorLicense}}\",\n  \"specialtyId\": 2147483647\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "c276ccce-e140-4eae-8b18-b42f766a560c",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo INVALID_REFERENCE\", () => pm.expect(pm.response.json().error.code).to.eql(\"INVALID_REFERENCE\"));"
+                ],
+                "_lastExecutionId": "03541077-6dc5-4568-8b2f-e33cacee6f9b"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ee7a95ad-431b-4fce-9a68-8f7ec851fe88",
+          "name": "08 - Body invalido (400)",
+          "request": {
+            "description": {
+              "content": "08 - Body invalido (400)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "doctors"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"G\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "f5b076c5-726d-4a55-a44b-8c12b569c018",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo VALIDATION_ERROR\", () => pm.expect(pm.response.json().error.code).to.eql(\"VALIDATION_ERROR\"));"
+                ],
+                "_lastExecutionId": "6ba87ab3-9b85-4895-bed3-cf2a256f779c"
+              }
+            }
+          ]
+        },
+        {
+          "id": "006d742d-7d64-4f3b-b70f-b44dbfc411f5",
+          "name": "09 - Medico inexistente (404)",
+          "request": {
+            "description": {
+              "content": "09 - Medico inexistente (404)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "doctors",
+                "2147483647"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [],
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "2d507f94-05d3-4e84-9c09-5a43f43430f3",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ],
+                "_lastExecutionId": "258a895b-30b4-4ae5-a35a-b7128649e862"
+              }
+            }
+          ]
+        },
+        {
+          "id": "8a9593c8-2200-41d8-a265-ce17962d7bcb",
+          "name": "10 - ID invalido (400)",
+          "request": {
+            "description": {
+              "content": "10 - ID invalido (400)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "doctors",
+                "abc"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [],
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "2def2d47-9caf-4cf3-85f3-7ccea20a2a9e",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ],
+                "_lastExecutionId": "4c24a294-69f5-473f-becb-2d8aee2e9edb"
+              }
+            }
+          ]
+        }
+      ],
+      "event": []
+    },
+    {
+      "id": "0f0af4f5-fe18-4667-bb51-28bd06c2e215",
+      "name": "Nurses",
+      "item": [
+        {
+          "id": "e72127f8-79fd-4b1f-90c5-7c5795a8a337",
+          "name": "01 - Crear enfermero (201)",
+          "request": {
+            "description": {
+              "content": "01 - Crear enfermero (201)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "nurses"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Florence\",\n  \"lastName\": \"Nightingale\",\n  \"licenseNumber\": \"{{nurseLicense}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "d849301f-6c5d-4aee-a9ab-e9885f21eb2b",
+                "type": "text/javascript",
+                "exec": [
+                  "(() => {",
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"firstName\"); pm.expect(data).to.have.property(\"lastName\"); pm.expect(data).to.have.property(\"licenseNumber\");});",
+                  "pm.collectionVariables.set(\"nurseId\", data.id);",
+                  "})();"
+                ],
+                "_lastExecutionId": "e840d799-b552-4c05-8672-eea2b8abef52"
+              }
+            }
+          ]
+        },
+        {
+          "id": "4c7d25c5-396a-4f0f-a312-a267022649c8",
+          "name": "02 - Obtener enfermero",
+          "request": {
+            "description": {
+              "content": "02 - Obtener enfermero",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "nurses",
+                "{{nurseId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "a2e8a6df-31b4-4d87-9750-d0828375e41b",
+                "type": "text/javascript",
+                "exec": [
+                  "(() => {",
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"licenseNumber\");});",
+                  "})();"
+                ],
+                "_lastExecutionId": "4b2838f8-4f4b-43f9-bc22-fd8d3cac00c3"
+              }
+            }
+          ]
+        },
+        {
+          "id": "732c3d9f-dc0e-4316-9160-cc33eecb631d",
+          "name": "03 - Actualizar enfermero",
+          "request": {
+            "description": {
+              "content": "03 - Actualizar enfermero",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "nurses",
+                "{{nurseId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "PATCH",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lastName\": \"Nightingale-Test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "66890ac8-9292-42ef-9014-66cb93bfea29",
+                "type": "text/javascript",
+                "exec": [
+                  "(() => {",
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"lastName\");});",
+                  "})();"
+                ],
+                "_lastExecutionId": "1cc1d7b2-7316-45cd-8cad-cf52aadba879"
+              }
+            }
+          ]
+        },
+        {
+          "id": "526607b2-d76e-44f4-bac5-beb37d05ad6b",
+          "name": "04 - Buscar enfermero",
+          "request": {
+            "description": {
+              "content": "04 - Buscar enfermero",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "nurses",
+                "search"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "key": "keywords",
+                  "value": "Nightingale"
+                }
+              ],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "fe24c762-e839-4771-b30f-43e6f4f6527e",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Coleccion\",()=>pm.expect(pm.response.json().data).to.be.an(\"array\"));"
+                ],
+                "_lastExecutionId": "707329a6-b12f-412d-81b2-459a62c48ec9"
+              }
+            }
+          ]
+        },
+        {
+          "id": "38910c8e-0068-4073-a778-e10b19ff3b1f",
+          "name": "05 - Listar enfermeros",
+          "request": {
+            "description": {
+              "content": "05 - Listar enfermeros",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "nurses"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "076527d4-573c-4c30-ac8c-d292fe715b60",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Coleccion\",()=>pm.expect(pm.response.json().data).to.be.an(\"array\"));"
+                ],
+                "_lastExecutionId": "df42a4e5-055c-4820-ad2d-a36e79d1ae31"
+              }
+            }
+          ]
+        },
+        {
+          "id": "d3039afc-60f2-4e67-909b-6c911bece4ac",
+          "name": "06 - Matricula duplicada (409)",
+          "request": {
+            "description": {
+              "content": "06 - Matricula duplicada (409)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "nurses"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Florence\",\n  \"lastName\": \"Nightingale\",\n  \"licenseNumber\": \"{{nurseLicense}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "50952792-bcb6-4f0a-8e34-eabd7e281a69",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo LICENSE_NUMBER_TAKEN\", () => pm.expect(pm.response.json().error.code).to.eql(\"LICENSE_NUMBER_TAKEN\"));"
+                ],
+                "_lastExecutionId": "b4a98b74-2cb2-4250-ba0d-568316ec06a2"
+              }
+            }
+          ]
+        },
+        {
+          "id": "8e7add35-ff66-45ed-b3c8-14282d382646",
+          "name": "07 - Body invalido (400)",
+          "request": {
+            "description": {
+              "content": "07 - Body invalido (400)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "nurses"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"F\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "543e9bb3-6b21-4c07-96fb-d592c8fc0a49",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo VALIDATION_ERROR\", () => pm.expect(pm.response.json().error.code).to.eql(\"VALIDATION_ERROR\"));"
+                ],
+                "_lastExecutionId": "70bdd6ad-2dcd-4b47-8fab-d9beccb55b82"
+              }
+            }
+          ]
+        },
+        {
+          "id": "a24615e6-6db7-4c82-af1d-158d0a3ee4a6",
+          "name": "08 - Enfermero inexistente (404)",
+          "request": {
+            "description": {
+              "content": "08 - Enfermero inexistente (404)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "nurses",
+                "2147483647"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [],
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "1b2251dd-7289-40ba-88cc-005b1c44022e",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ],
+                "_lastExecutionId": "2b37b7cd-8d17-4ffe-861c-22c1c63c5344"
+              }
+            }
+          ]
+        },
+        {
+          "id": "54323745-1bd9-4d75-902b-08190676d21c",
+          "name": "09 - ID invalido (400)",
+          "request": {
+            "description": {
+              "content": "09 - ID invalido (400)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "nurses",
+                "abc"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [],
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "4fc9deb5-5900-4ebd-aa77-d18732a5d25e",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ],
+                "_lastExecutionId": "dc5da886-47a5-4a32-a11f-a9a0b901cc57"
+              }
+            }
+          ]
+        }
+      ],
+      "event": []
+    },
+    {
+      "id": "70f26116-7cc8-4009-9c83-f831b00de98c",
+      "name": "Appointments",
+      "item": [
+        {
+          "id": "d8ae4b85-6671-4e5d-9bf1-88d28d90ec13",
+          "name": "01 - Crear turno (201)",
+          "request": {
+            "description": {
+              "content": "01 - Crear turno (201)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": {{patientId}},\n  \"doctorId\": {{doctorId}},\n  \"scheduledAt\": \"{{appointmentAt}}\",\n  \"durationMinutes\": 30,\n  \"reason\": \"Control general\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "c2e8759f-5b20-4b55-87e5-1311aae25a18",
+                "type": "text/javascript",
+                "exec": [
+                  "(() => {",
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"scheduledAt\"); pm.expect(data).to.have.property(\"status\"); pm.expect(data).to.have.property(\"patient\"); pm.expect(data).to.have.property(\"doctor\");});",
+                  "pm.collectionVariables.set(\"appointmentId\", data.id);",
+                  "pm.test(\"Asociaciones\",()=>{const d=pm.response.json().data;pm.expect(d.patient.id).to.eql(Number(pm.collectionVariables.get(\"patientId\")));pm.expect(d.doctor.id).to.eql(Number(pm.collectionVariables.get(\"doctorId\")));});",
+                  "})();"
+                ],
+                "_lastExecutionId": "6095af37-8a52-451e-9654-b1ecad440726"
+              }
+            }
+          ]
+        },
+        {
+          "id": "a8fcb1a4-02b0-47b8-bbac-0eae16ce4885",
+          "name": "02 - Obtener turno",
+          "request": {
+            "description": {
+              "content": "02 - Obtener turno",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments",
+                "{{appointmentId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "84b05724-2755-4ffc-adf1-be54aeecabc9",
+                "type": "text/javascript",
+                "exec": [
+                  "(() => {",
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"patient\"); pm.expect(data).to.have.property(\"doctor\"); pm.expect(data).to.have.property(\"status\");});",
+                  "})();"
+                ],
+                "_lastExecutionId": "b768d403-209c-4e63-a04f-34c35ebede97"
+              }
+            }
+          ]
+        },
+        {
+          "id": "8a0cebb3-de7f-4f6e-b256-f7c8531d5020",
+          "name": "03 - Actualizar duracion",
+          "request": {
+            "description": {
+              "content": "03 - Actualizar duracion",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments",
+                "{{appointmentId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "PATCH",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"durationMinutes\": 45\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "65d50799-ed61-4b80-b0c2-5288ef301aab",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Duracion actualizada\",()=>pm.expect(pm.response.json().data.durationMinutes).to.eql(45));"
+                ],
+                "_lastExecutionId": "1b4cab62-e07f-4b55-82ff-2110796be485"
+              }
+            }
+          ]
+        },
+        {
+          "id": "2cab08e8-0aa1-4b72-bb93-eacf3cb124f3",
+          "name": "04 - Listar turnos ordenados",
+          "request": {
+            "description": {
+              "content": "04 - Listar turnos ordenados",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "cda1eb70-3f10-428c-902d-e28b06692751",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const arr=pm.response.json().data;",
+                  "pm.test(\"Orden cronologico\",()=>{pm.expect(arr).to.be.an(\"array\");for(let i=1;i<arr.length;i++)pm.expect(new Date(arr[i-1].scheduledAt).getTime()).to.be.at.most(new Date(arr[i].scheduledAt).getTime());});"
+                ],
+                "_lastExecutionId": "c853954a-fdf2-4d17-8550-8802897220b3"
+              }
+            }
+          ]
+        },
+        {
+          "id": "d8d50d64-8d92-4039-9ed2-3019761d24e4",
+          "name": "05 - Filtro por medico",
+          "request": {
+            "description": {
+              "content": "05 - Filtro por medico",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments",
+                "search"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "key": "doctorId",
+                  "value": "{{doctorId}}"
+                }
+              ],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "f9860cab-557f-4f55-85a1-4b86c97febdc",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const arr=pm.response.json().data;",
+                  "pm.test(\"Encuentra turno de prueba\",()=>{pm.expect(arr).to.be.an(\"array\");pm.expect(arr.some(x=>x.id===Number(pm.collectionVariables.get(\"appointmentId\")))).to.eql(true);});"
+                ],
+                "_lastExecutionId": "87f6e329-4805-498e-92ba-55096e668bb6"
+              }
+            }
+          ]
+        },
+        {
+          "id": "6310a1ee-c781-4dae-ba5b-de162bcd4cf7",
+          "name": "06 - Filtro por fecha",
+          "request": {
+            "description": {
+              "content": "06 - Filtro por fecha",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments",
+                "search"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "{{appointmentDate}}"
+                }
+              ],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "f3d84e79-d1df-46fd-9b1f-a508428c43ee",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const arr=pm.response.json().data;",
+                  "pm.test(\"Encuentra turno de prueba\",()=>{pm.expect(arr).to.be.an(\"array\");pm.expect(arr.some(x=>x.id===Number(pm.collectionVariables.get(\"appointmentId\")))).to.eql(true);});"
+                ],
+                "_lastExecutionId": "14df6e2c-fcae-4b89-b67c-4d84d3491601"
+              }
+            }
+          ]
+        },
+        {
+          "id": "11cf8a86-28a4-433a-812d-ce85128037f0",
+          "name": "07 - Filtro por documento",
+          "request": {
+            "description": {
+              "content": "07 - Filtro por documento",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments",
+                "search"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "key": "documentNumber",
+                  "value": "{{docNumber}}"
+                }
+              ],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "6fa37315-b6a6-4b2f-b8ab-c9e9111fb1d3",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const arr=pm.response.json().data;",
+                  "pm.test(\"Encuentra turno de prueba\",()=>{pm.expect(arr).to.be.an(\"array\");pm.expect(arr.some(x=>x.id===Number(pm.collectionVariables.get(\"appointmentId\")))).to.eql(true);});"
+                ],
+                "_lastExecutionId": "2bd2bdd7-45ef-418f-bee3-aee352edc994"
+              }
+            }
+          ]
+        },
+        {
+          "id": "35c6cea5-e4fa-4145-abc6-5a4a8631880f",
+          "name": "08 - Filtro por nombre",
+          "request": {
+            "description": {
+              "content": "08 - Filtro por nombre",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments",
+                "search"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "key": "patientName",
+                  "value": "Ada"
+                }
+              ],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "4f7f2d97-391a-4980-a78f-4f052a3b2971",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const arr=pm.response.json().data;",
+                  "pm.test(\"Encuentra turno de prueba\",()=>{pm.expect(arr).to.be.an(\"array\");pm.expect(arr.some(x=>x.id===Number(pm.collectionVariables.get(\"appointmentId\")))).to.eql(true);});"
+                ],
+                "_lastExecutionId": "76f05b20-abf2-4c83-926f-86b8d40e3b87"
+              }
+            }
+          ]
+        },
+        {
+          "id": "5817436c-81dc-4561-911c-316c9569d6e2",
+          "name": "09 - Filtros combinados (AND)",
+          "request": {
+            "description": {
+              "content": "09 - Filtros combinados (AND)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments",
+                "search"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "key": "doctorId",
+                  "value": "{{doctorId}}"
+                },
+                {
+                  "key": "date",
+                  "value": "{{appointmentDate}}"
+                },
+                {
+                  "key": "documentNumber",
+                  "value": "{{docNumber}}"
+                },
+                {
+                  "key": "patientName",
+                  "value": "Ada"
+                }
+              ],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "52f20349-31b8-42af-8260-1f763730f33a",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const arr=pm.response.json().data;",
+                  "pm.test(\"Encuentra turno de prueba\",()=>{pm.expect(arr).to.be.an(\"array\");pm.expect(arr.some(x=>x.id===Number(pm.collectionVariables.get(\"appointmentId\")))).to.eql(true);});"
+                ],
+                "_lastExecutionId": "291d3b0a-61f9-46e3-a008-65e4c350ccfb"
+              }
+            }
+          ]
+        },
+        {
+          "id": "f9f431d6-8aab-4f8c-92e1-2e7eb30a1fb9",
+          "name": "10 - Doctor ocupado (409)",
+          "request": {
+            "description": {
+              "content": "10 - Doctor ocupado (409)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": {{patientId}},\n  \"doctorId\": {{doctorId}},\n  \"scheduledAt\": \"{{appointmentAt}}\",\n  \"durationMinutes\": 30,\n  \"reason\": \"Control general\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "dcab6897-0d7e-473d-8e6f-f3b1d34cf222",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo DOCTOR_SLOT_TAKEN\", () => pm.expect(pm.response.json().error.code).to.eql(\"DOCTOR_SLOT_TAKEN\"));"
+                ],
+                "_lastExecutionId": "6f59b82b-66d2-4883-9bd0-b17f5fec6ecd"
+              }
+            }
+          ]
+        },
+        {
+          "id": "fa8768e9-c132-44f4-afbf-c9edf916c3c4",
+          "name": "11 - Paciente inexistente (400)",
+          "request": {
+            "description": {
+              "content": "11 - Paciente inexistente (400)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": 2147483647,\n  \"doctorId\": {{doctorId}},\n  \"scheduledAt\": \"2026-12-11T14:30:00-03:00\",\n  \"durationMinutes\": 30,\n  \"reason\": \"Control general\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "f2f3cec9-b89c-4e1e-bc83-2dc9a2996b39",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo INVALID_REFERENCE\", () => pm.expect(pm.response.json().error.code).to.eql(\"INVALID_REFERENCE\"));"
+                ],
+                "_lastExecutionId": "39346269-3842-4127-a984-916cc4201ea4"
+              }
+            }
+          ]
+        },
+        {
+          "id": "64aa3946-becc-480d-bfa7-86fc061ae7e1",
+          "name": "12 - Doctor inexistente (400)",
+          "request": {
+            "description": {
+              "content": "12 - Doctor inexistente (400)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": {{patientId}},\n  \"doctorId\": 2147483647,\n  \"scheduledAt\": \"2026-12-11T14:30:00-03:00\",\n  \"durationMinutes\": 30,\n  \"reason\": \"Control general\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "688efea1-6e57-499e-b9cf-431feb4459bb",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo INVALID_REFERENCE\", () => pm.expect(pm.response.json().error.code).to.eql(\"INVALID_REFERENCE\"));"
+                ],
+                "_lastExecutionId": "b0d04321-ad93-4ef1-9a72-a7b8134b8c06"
+              }
+            }
+          ]
+        },
+        {
+          "id": "aba7df96-8106-4448-888c-9bad72792a5c",
+          "name": "13 - DoctorId invalido en search (400)",
+          "request": {
+            "description": {
+              "content": "13 - DoctorId invalido en search (400)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments",
+                "search"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "key": "doctorId",
+                  "value": "abc"
+                }
+              ],
+              "variable": []
+            },
+            "header": [],
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "356a4f02-ef88-48a5-916f-ba817f5568fa",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ],
+                "_lastExecutionId": "e622f462-6792-465e-908d-4bb7a3b19e5d"
+              }
+            }
+          ]
+        },
+        {
+          "id": "7c4345d3-69ae-4030-8adf-11084a7f431d",
+          "name": "14 - Status invalido (400)",
+          "request": {
+            "description": {
+              "content": "14 - Status invalido (400)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments",
+                "{{appointmentId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "PATCH",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"INVALID\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "46d38c5e-e121-4588-a01e-2e409a027f73",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo VALIDATION_ERROR\", () => pm.expect(pm.response.json().error.code).to.eql(\"VALIDATION_ERROR\"));"
+                ],
+                "_lastExecutionId": "0680d216-6f5d-41a3-856d-0629fd5f4aa0"
+              }
+            }
+          ]
+        },
+        {
+          "id": "048abeaa-6dec-4ec7-80f5-98c08eac83ea",
+          "name": "15 - cancelledAt no se acepta (400)",
+          "request": {
+            "description": {
+              "content": "15 - cancelledAt no se acepta (400)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments",
+                "{{appointmentId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "PATCH",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cancelledAt\": \"2026-12-10T10:00:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "c11d78fb-c97c-465c-9e24-fe132a43721b",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo VALIDATION_ERROR\", () => pm.expect(pm.response.json().error.code).to.eql(\"VALIDATION_ERROR\"));"
+                ],
+                "_lastExecutionId": "5351b2dd-96e6-489e-a3e8-9bfa66f404cb"
+              }
+            }
+          ]
+        },
+        {
+          "id": "cb3fc53e-990f-4e16-af73-9b01391f47f0",
+          "name": "16 - Paciente con turnos no se elimina (409)",
+          "request": {
+            "description": {
+              "content": "16 - Paciente con turnos no se elimina (409)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "patients",
+                "{{patientId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "DELETE"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "dc2e29d3-00bf-49e1-9661-75920e95697d",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Conflicto referencial\",()=>pm.expect(pm.response.json().error.code).to.be.a(\"string\"));"
+                ],
+                "_lastExecutionId": "302e26ec-79e9-4598-9454-5c6afdee8a9d"
+              }
+            }
+          ]
+        },
+        {
+          "id": "1d87e64d-ede7-41f0-87a5-9d550a75719e",
+          "name": "17 - Medico con turnos no se elimina (409)",
+          "request": {
+            "description": {
+              "content": "17 - Medico con turnos no se elimina (409)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "doctors",
+                "{{doctorId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "DELETE"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "74b20cb5-88e7-4560-8a3e-08bfe5d42643",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Conflicto referencial\",()=>pm.expect(pm.response.json().error.code).to.be.a(\"string\"));"
+                ],
+                "_lastExecutionId": "2bc42408-8131-4c91-861b-5eb074018040"
+              }
+            }
+          ]
+        },
+        {
+          "id": "11806852-a0b2-4401-ad4b-61043e5f82ea",
+          "name": "18 - Cancelar turno (200)",
+          "request": {
+            "description": {
+              "content": "18 - Cancelar turno (200)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments",
+                "{{appointmentId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "PATCH",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELLED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "79056398-7009-4e6f-a189-51f70bd362d8",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Cancelado con fecha\",()=>{const d=pm.response.json().data;pm.expect(d.status).to.eql(\"CANCELLED\");pm.expect(d.cancelledAt).to.be.a(\"string\").and.not.empty;});"
+                ],
+                "_lastExecutionId": "a5dc4f94-8080-476a-98e7-b33a560fcf16"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ca920272-2a7a-440d-88ea-8f753ef03959",
+          "name": "19 - Turno cancelado sigue existiendo",
+          "request": {
+            "description": {
+              "content": "19 - Turno cancelado sigue existiendo",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments",
+                "{{appointmentId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "4535dba3-853b-4282-8fc0-40aebece1658",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Persistio cancelacion\",()=>{const d=pm.response.json().data;pm.expect(d.status).to.eql(\"CANCELLED\");pm.expect(d.cancelledAt).to.be.a(\"string\");});"
+                ],
+                "_lastExecutionId": "5d7390ce-cdf4-43f8-a8e5-a4369022db15"
+              }
+            }
+          ]
+        },
+        {
+          "id": "36d68d61-0b31-41c5-9937-236cf6296527",
+          "name": "20 - Doble cancelacion (409)",
+          "request": {
+            "description": {
+              "content": "20 - Doble cancelacion (409)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments",
+                "{{appointmentId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "PATCH",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELLED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "78ad213f-332e-4c38-b15d-964a8e32f0f2",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo APPOINTMENT_ALREADY_CANCELLED\", () => pm.expect(pm.response.json().error.code).to.eql(\"APPOINTMENT_ALREADY_CANCELLED\"));"
+                ],
+                "_lastExecutionId": "2154c499-d570-4d90-a5d0-04071deb4790"
+              }
+            }
+          ]
+        },
+        {
+          "id": "3c08f4bf-1dc2-464b-9447-33f383abb980",
+          "name": "21 - Turno inexistente (404)",
+          "request": {
+            "description": {
+              "content": "21 - Turno inexistente (404)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments",
+                "2147483647"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [],
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "d920e161-ccc8-40b3-b93e-61f965f89680",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ],
+                "_lastExecutionId": "d152e32b-1a80-430c-8062-6a39d8beca85"
+              }
+            }
+          ]
+        },
+        {
+          "id": "9fafa73f-5489-4134-9b9c-5099d611d0df",
+          "name": "22 - ID invalido (400)",
+          "request": {
+            "description": {
+              "content": "22 - ID invalido (400)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments",
+                "abc"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [],
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "8e5cc257-5e57-45ef-9561-6afa196948fb",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ],
+                "_lastExecutionId": "26875fe5-2666-436a-901a-dbd692fe2738"
+              }
+            }
+          ]
+        },
+        {
+          "id": "c8d815aa-5124-4fdc-839d-b1cc02190bd6",
+          "name": "23 - Eliminar turno (204)",
+          "request": {
+            "description": {
+              "content": "23 - Eliminar turno (204)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments",
+                "{{appointmentId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "DELETE"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "6cb0d424-0dba-4583-b901-cae911ec2317",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Sin body\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+                ],
+                "_lastExecutionId": "893f203c-7352-4f5d-bbf8-fe190e0765e0"
+              }
+            }
+          ]
+        },
+        {
+          "id": "feecb560-b98f-4a8b-9cd7-edc92e7b7934",
+          "name": "24 - Turno eliminado (404)",
+          "request": {
+            "description": {
+              "content": "24 - Turno eliminado (404)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "appointments",
+                "{{appointmentId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [],
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "e46c248b-e6ca-4107-8116-9aef6b7e37c0",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ],
+                "_lastExecutionId": "c3be982a-3a9a-40d8-bd16-54e8dda94bf5"
+              }
+            }
+          ]
+        }
+      ],
+      "event": []
+    },
+    {
+      "id": "e3ca9602-5a7b-4422-8135-6941bb7bc443",
+      "name": "Users",
+      "item": [
+        {
+          "id": "2c7c442e-81d0-4e80-a6a9-f0f8154dcf01",
+          "name": "01 - Crear usuario (201)",
+          "request": {
+            "description": {
+              "content": "01 - Crear usuario (201)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "users"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman {{runId}}\",\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "0b3c0317-9904-46cc-a780-45e1a10bbb99",
+                "type": "text/javascript",
+                "exec": [
+                  "(() => {",
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"name\"); pm.expect(data).to.have.property(\"email\"); pm.expect(data).to.have.property(\"role\");});",
+                  "pm.collectionVariables.set(\"userId\", data.id);",
+                  "pm.test(\"Sin password\",()=>pm.expect(pm.response.json().data).not.to.have.property(\"password\"));",
+                  "})();"
+                ],
+                "_lastExecutionId": "dc776d8f-0652-4e80-9de5-e62183ce71ee"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ffb18742-4e86-42e3-ac52-11b61d8796e3",
+          "name": "02 - Obtener usuario",
+          "request": {
+            "description": {
+              "content": "02 - Obtener usuario",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "users",
+                "{{userId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "256a4cc9-6bc0-4916-9f84-4be4a6106ef1",
+                "type": "text/javascript",
+                "exec": [
+                  "(() => {",
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"name\"); pm.expect(data).to.have.property(\"email\"); pm.expect(data).to.have.property(\"role\");});",
+                  "})();"
+                ],
+                "_lastExecutionId": "43373f72-cf26-40fc-af66-6b82a0b9cfc6"
+              }
+            }
+          ]
+        },
+        {
+          "id": "3374dbea-ed09-4c06-a183-52314cc0d67d",
+          "name": "03 - Actualizar usuario",
+          "request": {
+            "description": {
+              "content": "03 - Actualizar usuario",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "users",
+                "{{userId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "PATCH",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Actualizado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "3145e475-86c3-4e9a-a475-754de67767c9",
+                "type": "text/javascript",
+                "exec": [
+                  "(() => {",
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"name\");});",
+                  "})();"
+                ],
+                "_lastExecutionId": "c6da0da4-27e1-4b58-856e-15ee70c9aebf"
+              }
+            }
+          ]
+        },
+        {
+          "id": "69d10350-ed6f-4ee8-8cbc-81631565cd1c",
+          "name": "04 - Buscar usuario",
+          "request": {
+            "description": {
+              "content": "04 - Buscar usuario",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "users",
+                "search"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "key": "keywords",
+                  "value": "Postman"
+                }
+              ],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "b8aa1cd3-3aa6-4dbc-a688-d8498e8bc56a",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Coleccion\",()=>pm.expect(pm.response.json().data).to.be.an(\"array\"));"
+                ],
+                "_lastExecutionId": "3b84a7b1-9d8c-4817-b8da-1c78197f15f4"
+              }
+            }
+          ]
+        },
+        {
+          "id": "836248af-68b9-4d1f-9b32-b51bd74100dd",
+          "name": "05 - Listar usuarios",
+          "request": {
+            "description": {
+              "content": "05 - Listar usuarios",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "users"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "0a769b60-dd5d-4236-980f-9200246c945b",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Coleccion\",()=>pm.expect(pm.response.json().data).to.be.an(\"array\"));"
+                ],
+                "_lastExecutionId": "ba106b1c-4006-4013-a0fe-b3f5cee48eb5"
+              }
+            }
+          ]
+        },
+        {
+          "id": "69b45e9c-a4be-4b37-995e-c556b41f095e",
+          "name": "06 - Email duplicado (409)",
+          "request": {
+            "description": {
+              "content": "06 - Email duplicado (409)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "users"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman {{runId}}\",\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "3704dfa1-28c8-497d-baac-bd339703e682",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo EMAIL_TAKEN\", () => pm.expect(pm.response.json().error.code).to.eql(\"EMAIL_TAKEN\"));"
+                ],
+                "_lastExecutionId": "59636443-2bec-43f4-8b21-5799f999149d"
+              }
+            }
+          ]
+        },
+        {
+          "id": "6d903c47-65d1-4a98-93dc-32ecc7aa63ef",
+          "name": "07 - Role no permitido en POST (400)",
+          "request": {
+            "description": {
+              "content": "07 - Role no permitido en POST (400)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "users"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman {{runId}}\",\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\",\n  \"role\": \"ROLE_ADMIN\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "1f3e3c68-fe28-4529-9ca3-649bf4d32132",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo VALIDATION_ERROR\", () => pm.expect(pm.response.json().error.code).to.eql(\"VALIDATION_ERROR\"));"
+                ],
+                "_lastExecutionId": "c4bef07b-f7d7-429f-b597-12284cb1f37e"
+              }
+            }
+          ]
+        },
+        {
+          "id": "9297e99d-8bba-4b91-a433-06843c05cd03",
+          "name": "08 - Body invalido (400)",
+          "request": {
+            "description": {
+              "content": "08 - Body invalido (400)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "users"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"no-es-email\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "a34260e8-fb78-4411-9d7b-2f07ed9a6545",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo VALIDATION_ERROR\", () => pm.expect(pm.response.json().error.code).to.eql(\"VALIDATION_ERROR\"));"
+                ],
+                "_lastExecutionId": "a9a10938-8f22-400f-9e79-5dbbaa482c91"
+              }
+            }
+          ]
+        },
+        {
+          "id": "07d2e572-9169-4652-987a-2c544edfd3a9",
+          "name": "09 - Usuario inexistente (404)",
+          "request": {
+            "description": {
+              "content": "09 - Usuario inexistente (404)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "users",
+                "2147483647"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [],
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "1bf84531-4ba6-49a0-9b78-24a4f7db819a",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ],
+                "_lastExecutionId": "7905e838-db58-4ea2-93e5-6d7938cf4922"
+              }
+            }
+          ]
+        },
+        {
+          "id": "b6e89421-3a37-4d38-8b1a-7c9a92682a1f",
+          "name": "10 - ID invalido (400)",
+          "request": {
+            "description": {
+              "content": "10 - ID invalido (400)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "users",
+                "abc"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [],
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "733ea30f-9a1b-44a9-a9ad-010910d65571",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ],
+                "_lastExecutionId": "06fdee6f-aa05-498e-87d5-c5f76978ab37"
+              }
+            }
+          ]
+        }
+      ],
+      "event": []
+    },
+    {
+      "id": "5682e16d-2fed-40a4-9874-b537f7ea55da",
+      "name": "Auth",
+      "item": [
+        {
+          "id": "7b94b0ec-ee9e-4479-9ccd-e7a6d87bef22",
+          "name": "01 - Login con usuario de prueba",
+          "request": {
+            "description": {
+              "content": "01 - Login con usuario de prueba",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "cb7a29a7-026d-46d2-9573-0921c2b1946b",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"No se expone password\",()=>pm.expect(pm.response.text()).not.to.include(\"\\\"password\\\"\"));"
+                ],
+                "_lastExecutionId": "a0e30881-79c8-490c-a74d-59bcedf712ec"
+              }
+            }
+          ]
+        }
+      ],
+      "event": []
+    },
+    {
+      "id": "c4f3fb44-23a3-4955-83ac-c1ca5d893acf",
+      "name": "Limpieza",
+      "item": [
+        {
+          "id": "ebd483bc-d238-4631-a309-01f1abc6f146",
+          "name": "01 - Eliminar paciente (204)",
+          "request": {
+            "description": {
+              "content": "01 - Eliminar paciente (204)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "patients",
+                "{{patientId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "DELETE"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "b24ea69b-9dfc-4d87-ab04-600198ba19e6",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Sin body\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+                ],
+                "_lastExecutionId": "6d0d4876-2967-4a27-9462-a67297ae5e96"
+              }
+            }
+          ]
+        },
+        {
+          "id": "9b30a8a2-0810-447d-8b68-b379877563a2",
+          "name": "02 - Eliminar medico (204)",
+          "request": {
+            "description": {
+              "content": "02 - Eliminar medico (204)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "doctors",
+                "{{doctorId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "DELETE"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "1d8de847-2227-4469-876b-e81f6ef17277",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Sin body\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+                ],
+                "_lastExecutionId": "aeed1621-98eb-4771-848c-60ae351f78ff"
+              }
+            }
+          ]
+        },
+        {
+          "id": "fefe3830-8150-4414-81dc-05f83ad412d4",
+          "name": "03 - Eliminar enfermero (204)",
+          "request": {
+            "description": {
+              "content": "03 - Eliminar enfermero (204)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "nurses",
+                "{{nurseId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "DELETE"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "941f2204-61d3-4ab3-aa31-0db557118685",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Sin body\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+                ],
+                "_lastExecutionId": "faa57cef-502b-4f5c-b556-514416d19f73"
+              }
+            }
+          ]
+        },
+        {
+          "id": "0831fcf3-6e5a-4ece-9234-a305ffd911cc",
+          "name": "04 - Eliminar usuario (204)",
+          "request": {
+            "description": {
+              "content": "04 - Eliminar usuario (204)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "users",
+                "{{userId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "DELETE"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "335659de-2496-4d72-9ae3-f3d8244be64b",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Sin body\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+                ],
+                "_lastExecutionId": "ddb1a2a6-dd18-4d3e-b1f0-e10810b9bd64"
+              }
+            }
+          ]
+        },
+        {
+          "id": "d6497e66-8cc2-46fa-9969-0be6db518c14",
+          "name": "05 - Confirmar paciente eliminado (404)",
+          "request": {
+            "description": {
+              "content": "05 - Confirmar paciente eliminado (404)",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "patients",
+                "{{patientId}}"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [],
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "1b772aa0-c931-45ff-91e8-cc4ecfe19af4",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ],
+                "_lastExecutionId": "f260d3df-6b5e-43d2-b532-073f57ea0d9d"
+              }
+            }
+          ]
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [],
+  "info": {
+    "_postman_id": "f9c91876-e615-4685-b734-fe8c7a99fd35",
+    "name": "Hospital API - Clase 8 (scripts corregidos)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "Scripts de test aislados para evitar conflicto de variable data. Requiere corregir tambien el error.middleware.js de la API local.",
+      "type": "text/plain"
+    }
+  }
+}

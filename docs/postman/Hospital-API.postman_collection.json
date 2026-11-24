@@ -1,0 +1,2378 @@
+{
+  "info": {
+    "_postman_id": "f9c91876-e615-4685-b734-fe8c7a99fd35",
+    "name": "Hospital API - Clase 8",
+    "description": "Flujo de pruebas contra base local sembrada. Ejecutar en orden con Runner, primero npm run db:seed. Datos sinteticos. La operacion de cambio de rol requiere autorizacion y se ofrece como prueba manual separada.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "01 - Health check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/health",
+            "description": "01 - Health check"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const nonce = String(Date.now()).slice(-8) + String(Math.floor(Math.random()*1000)).padStart(3,\"0\");",
+                  "pm.collectionVariables.set(\"runId\",nonce);",
+                  "pm.collectionVariables.set(\"docNumber\",String(10000000 + Math.floor(Math.random()*89999999)));",
+                  "pm.collectionVariables.set(\"doctorLicense\",\"MN-\"+nonce);",
+                  "pm.collectionVariables.set(\"nurseLicense\",\"EN-\"+nonce);",
+                  "pm.collectionVariables.set(\"testEmail\",\"hospital.postman.\"+nonce+\"@example.test\");",
+                  "pm.collectionVariables.set(\"testPassword\",\"Demo_\"+nonce+\"!\");",
+                  "pm.collectionVariables.set(\"appointmentDate\",\"2026-12-10\");",
+                  "pm.collectionVariables.set(\"appointmentAt\",\"2026-12-10T14:30:00-03:00\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Health ok\", () => pm.expect(pm.response.json().status).to.eql(\"ok\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Specialties",
+      "item": [
+        {
+          "name": "01 - Listar especialidades",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/specialties",
+            "description": "01 - Listar especialidades"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data=pm.response.json().data;",
+                  "pm.test(\"Catalogo no vacio (ejecutar db:seed)\",()=>pm.expect(data).to.be.an(\"array\").that.is.not.empty);",
+                  "if(data.length)pm.collectionVariables.set(\"specialtyId\",data[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02 - Obtener especialidad por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/specialties/{{specialtyId}}",
+            "description": "02 - Obtener especialidad por ID"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"name\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03 - ID inexistente (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/specialties/2147483647",
+            "description": "03 - ID inexistente (404)",
+            "body": {
+              "mode": "raw",
+              "raw": "\"pm.test(\\\"Codigo SPECIALTY_NOT_FOUND\\\", () => pm.expect(pm.response.json().error.code).to.eql(\\\"SPECIALTY_NOT_FOUND\\\"));\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 - ID invalido (400)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/specialties/abc",
+            "description": "04 - ID invalido (400)",
+            "body": {
+              "mode": "raw",
+              "raw": "\"pm.test(\\\"Codigo INVALID_ID\\\", () => pm.expect(pm.response.json().error.code).to.eql(\\\"INVALID_ID\\\"));\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Patients",
+      "item": [
+        {
+          "name": "01 - Crear paciente (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/patients",
+            "description": "01 - Crear paciente (201)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Ada\",\n  \"lastName\": \"Lovelace\",\n  \"documentNumber\": \"{{docNumber}}\",\n  \"birthDate\": \"1985-12-10\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"firstName\"); pm.expect(data).to.have.property(\"lastName\"); pm.expect(data).to.have.property(\"documentNumber\"); pm.expect(data).to.have.property(\"birthDate\");});",
+                  "pm.collectionVariables.set(\"patientId\", data.id);",
+                  "pm.test(\"Location\",()=>pm.expect(pm.response.headers.get(\"Location\")).to.match(/^\\/api\\/patients\\/\\d+$/));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02 - Obtener paciente (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/patients/{{patientId}}",
+            "description": "02 - Obtener paciente (200)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"firstName\"); pm.expect(data).to.have.property(\"lastName\"); pm.expect(data).to.have.property(\"documentNumber\"); pm.expect(data).to.have.property(\"birthDate\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03 - Actualizar paciente (200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/patients/{{patientId}}",
+            "description": "03 - Actualizar paciente (200)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lastName\": \"Lovelace-Test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"lastName\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 - Buscar paciente por apellido",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/patients/search?keywords=Lovelace",
+            "description": "04 - Buscar paciente por apellido"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Coleccion\",()=>pm.expect(pm.response.json().data).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05 - Listar pacientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/patients",
+            "description": "05 - Listar pacientes"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Coleccion\",()=>pm.expect(pm.response.json().data).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06 - Documento duplicado (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/patients",
+            "description": "06 - Documento duplicado (409)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Ada\",\n  \"lastName\": \"Lovelace\",\n  \"documentNumber\": \"{{docNumber}}\",\n  \"birthDate\": \"1985-12-10\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo DOCUMENT_NUMBER_TAKEN\", () => pm.expect(pm.response.json().error.code).to.eql(\"DOCUMENT_NUMBER_TAKEN\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07 - Body invalido (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/patients",
+            "description": "07 - Body invalido (400)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"A\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo VALIDATION_ERROR\", () => pm.expect(pm.response.json().error.code).to.eql(\"VALIDATION_ERROR\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08 - Campo desconocido (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/patients",
+            "description": "08 - Campo desconocido (400)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Ada\",\n  \"lastName\": \"Lovelace\",\n  \"documentNumber\": \"{{docNumber}}\",\n  \"birthDate\": \"1985-12-10\",\n  \"unexpectedField\": \"x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo VALIDATION_ERROR\", () => pm.expect(pm.response.json().error.code).to.eql(\"VALIDATION_ERROR\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09 - Paciente inexistente (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/patients/2147483647",
+            "description": "09 - Paciente inexistente (404)",
+            "body": {
+              "mode": "raw",
+              "raw": "\"pm.test(\\\"Codigo PATIENT_NOT_FOUND\\\", () => pm.expect(pm.response.json().error.code).to.eql(\\\"PATIENT_NOT_FOUND\\\"));\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10 - ID invalido (400)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/patients/abc",
+            "description": "10 - ID invalido (400)",
+            "body": {
+              "mode": "raw",
+              "raw": "\"pm.test(\\\"Codigo INVALID_ID\\\", () => pm.expect(pm.response.json().error.code).to.eql(\\\"INVALID_ID\\\"));\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "11 - PATCH vacio (400)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/patients/{{patientId}}",
+            "description": "11 - PATCH vacio (400)",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo VALIDATION_ERROR\", () => pm.expect(pm.response.json().error.code).to.eql(\"VALIDATION_ERROR\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Doctors",
+      "item": [
+        {
+          "name": "01 - Crear medico (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/doctors",
+            "description": "01 - Crear medico (201)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Gregory\",\n  \"lastName\": \"House\",\n  \"licenseNumber\": \"{{doctorLicense}}\",\n  \"specialtyId\": {{specialtyId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"firstName\"); pm.expect(data).to.have.property(\"lastName\"); pm.expect(data).to.have.property(\"licenseNumber\"); pm.expect(data).to.have.property(\"specialty\");});",
+                  "pm.collectionVariables.set(\"doctorId\", data.id);",
+                  "pm.test(\"Especialidad anidada\",()=>pm.expect(pm.response.json().data.specialty).to.have.property(\"id\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02 - Obtener medico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/doctors/{{doctorId}}",
+            "description": "02 - Obtener medico"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"specialty\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03 - Actualizar medico",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/doctors/{{doctorId}}",
+            "description": "03 - Actualizar medico",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lastName\": \"House-Test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"lastName\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 - Buscar por apellido",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/doctors/search?keywords=House",
+            "description": "04 - Buscar por apellido"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Coleccion\",()=>pm.expect(pm.response.json().data).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05 - Listar medicos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/doctors",
+            "description": "05 - Listar medicos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Coleccion\",()=>pm.expect(pm.response.json().data).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06 - Matricula duplicada (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/doctors",
+            "description": "06 - Matricula duplicada (409)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Gregory\",\n  \"lastName\": \"House\",\n  \"licenseNumber\": \"{{doctorLicense}}\",\n  \"specialtyId\": {{specialtyId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo LICENSE_NUMBER_TAKEN\", () => pm.expect(pm.response.json().error.code).to.eql(\"LICENSE_NUMBER_TAKEN\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07 - Especialidad inexistente (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/doctors",
+            "description": "07 - Especialidad inexistente (400)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Gregory\",\n  \"lastName\": \"House\",\n  \"licenseNumber\": \"{{doctorLicense}}\",\n  \"specialtyId\": 2147483647\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo INVALID_REFERENCE\", () => pm.expect(pm.response.json().error.code).to.eql(\"INVALID_REFERENCE\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08 - Body invalido (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/doctors",
+            "description": "08 - Body invalido (400)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"G\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo VALIDATION_ERROR\", () => pm.expect(pm.response.json().error.code).to.eql(\"VALIDATION_ERROR\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09 - Medico inexistente (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/doctors/2147483647",
+            "description": "09 - Medico inexistente (404)",
+            "body": {
+              "mode": "raw",
+              "raw": "\"pm.test(\\\"Codigo DOCTOR_NOT_FOUND\\\", () => pm.expect(pm.response.json().error.code).to.eql(\\\"DOCTOR_NOT_FOUND\\\"));\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10 - ID invalido (400)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/doctors/abc",
+            "description": "10 - ID invalido (400)",
+            "body": {
+              "mode": "raw",
+              "raw": "\"pm.test(\\\"Codigo INVALID_ID\\\", () => pm.expect(pm.response.json().error.code).to.eql(\\\"INVALID_ID\\\"));\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Nurses",
+      "item": [
+        {
+          "name": "01 - Crear enfermero (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/nurses",
+            "description": "01 - Crear enfermero (201)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Florence\",\n  \"lastName\": \"Nightingale\",\n  \"licenseNumber\": \"{{nurseLicense}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"firstName\"); pm.expect(data).to.have.property(\"lastName\"); pm.expect(data).to.have.property(\"licenseNumber\");});",
+                  "pm.collectionVariables.set(\"nurseId\", data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02 - Obtener enfermero",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/nurses/{{nurseId}}",
+            "description": "02 - Obtener enfermero"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"licenseNumber\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03 - Actualizar enfermero",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/nurses/{{nurseId}}",
+            "description": "03 - Actualizar enfermero",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lastName\": \"Nightingale-Test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"lastName\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 - Buscar enfermero",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/nurses/search?keywords=Nightingale",
+            "description": "04 - Buscar enfermero"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Coleccion\",()=>pm.expect(pm.response.json().data).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05 - Listar enfermeros",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/nurses",
+            "description": "05 - Listar enfermeros"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Coleccion\",()=>pm.expect(pm.response.json().data).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06 - Matricula duplicada (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/nurses",
+            "description": "06 - Matricula duplicada (409)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Florence\",\n  \"lastName\": \"Nightingale\",\n  \"licenseNumber\": \"{{nurseLicense}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo LICENSE_NUMBER_TAKEN\", () => pm.expect(pm.response.json().error.code).to.eql(\"LICENSE_NUMBER_TAKEN\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07 - Body invalido (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/nurses",
+            "description": "07 - Body invalido (400)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"F\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo VALIDATION_ERROR\", () => pm.expect(pm.response.json().error.code).to.eql(\"VALIDATION_ERROR\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08 - Enfermero inexistente (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/nurses/2147483647",
+            "description": "08 - Enfermero inexistente (404)",
+            "body": {
+              "mode": "raw",
+              "raw": "\"pm.test(\\\"Codigo NURSE_NOT_FOUND\\\", () => pm.expect(pm.response.json().error.code).to.eql(\\\"NURSE_NOT_FOUND\\\"));\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09 - ID invalido (400)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/nurses/abc",
+            "description": "09 - ID invalido (400)",
+            "body": {
+              "mode": "raw",
+              "raw": "\"pm.test(\\\"Codigo INVALID_ID\\\", () => pm.expect(pm.response.json().error.code).to.eql(\\\"INVALID_ID\\\"));\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Appointments",
+      "item": [
+        {
+          "name": "01 - Crear turno (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/appointments",
+            "description": "01 - Crear turno (201)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": {{patientId}},\n  \"doctorId\": {{doctorId}},\n  \"scheduledAt\": \"{{appointmentAt}}\",\n  \"durationMinutes\": 30,\n  \"reason\": \"Control general\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"scheduledAt\"); pm.expect(data).to.have.property(\"status\"); pm.expect(data).to.have.property(\"patient\"); pm.expect(data).to.have.property(\"doctor\");});",
+                  "pm.collectionVariables.set(\"appointmentId\", data.id);",
+                  "pm.test(\"Asociaciones\",()=>{const d=pm.response.json().data;pm.expect(d.patient.id).to.eql(Number(pm.collectionVariables.get(\"patientId\")));pm.expect(d.doctor.id).to.eql(Number(pm.collectionVariables.get(\"doctorId\")));});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02 - Obtener turno",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/appointments/{{appointmentId}}",
+            "description": "02 - Obtener turno"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"patient\"); pm.expect(data).to.have.property(\"doctor\"); pm.expect(data).to.have.property(\"status\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03 - Actualizar duracion",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/appointments/{{appointmentId}}",
+            "description": "03 - Actualizar duracion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"durationMinutes\": 45\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Duracion actualizada\",()=>pm.expect(pm.response.json().data.durationMinutes).to.eql(45));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 - Listar turnos ordenados",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/appointments",
+            "description": "04 - Listar turnos ordenados"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const arr=pm.response.json().data;",
+                  "pm.test(\"Orden cronologico\",()=>{pm.expect(arr).to.be.an(\"array\");for(let i=1;i<arr.length;i++)pm.expect(new Date(arr[i-1].scheduledAt).getTime()).to.be.at.most(new Date(arr[i].scheduledAt).getTime());});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05 - Filtro por medico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/appointments/search?doctorId={{doctorId}}",
+            "description": "05 - Filtro por medico"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const arr=pm.response.json().data;",
+                  "pm.test(\"Encuentra turno de prueba\",()=>{pm.expect(arr).to.be.an(\"array\");pm.expect(arr.some(x=>x.id===Number(pm.collectionVariables.get(\"appointmentId\")))).to.eql(true);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06 - Filtro por fecha",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/appointments/search?date={{appointmentDate}}",
+            "description": "06 - Filtro por fecha"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const arr=pm.response.json().data;",
+                  "pm.test(\"Encuentra turno de prueba\",()=>{pm.expect(arr).to.be.an(\"array\");pm.expect(arr.some(x=>x.id===Number(pm.collectionVariables.get(\"appointmentId\")))).to.eql(true);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07 - Filtro por documento",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/appointments/search?documentNumber={{docNumber}}",
+            "description": "07 - Filtro por documento"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const arr=pm.response.json().data;",
+                  "pm.test(\"Encuentra turno de prueba\",()=>{pm.expect(arr).to.be.an(\"array\");pm.expect(arr.some(x=>x.id===Number(pm.collectionVariables.get(\"appointmentId\")))).to.eql(true);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08 - Filtro por nombre",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/appointments/search?patientName=Ada",
+            "description": "08 - Filtro por nombre"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const arr=pm.response.json().data;",
+                  "pm.test(\"Encuentra turno de prueba\",()=>{pm.expect(arr).to.be.an(\"array\");pm.expect(arr.some(x=>x.id===Number(pm.collectionVariables.get(\"appointmentId\")))).to.eql(true);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09 - Filtros combinados (AND)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/appointments/search?doctorId={{doctorId}}&date={{appointmentDate}}&documentNumber={{docNumber}}&patientName=Ada",
+            "description": "09 - Filtros combinados (AND)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const arr=pm.response.json().data;",
+                  "pm.test(\"Encuentra turno de prueba\",()=>{pm.expect(arr).to.be.an(\"array\");pm.expect(arr.some(x=>x.id===Number(pm.collectionVariables.get(\"appointmentId\")))).to.eql(true);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10 - Doctor ocupado (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/appointments",
+            "description": "10 - Doctor ocupado (409)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": {{patientId}},\n  \"doctorId\": {{doctorId}},\n  \"scheduledAt\": \"{{appointmentAt}}\",\n  \"durationMinutes\": 30,\n  \"reason\": \"Control general\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo DOCTOR_SLOT_TAKEN\", () => pm.expect(pm.response.json().error.code).to.eql(\"DOCTOR_SLOT_TAKEN\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "11 - Paciente inexistente (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/appointments",
+            "description": "11 - Paciente inexistente (400)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": 2147483647,\n  \"doctorId\": {{doctorId}},\n  \"scheduledAt\": \"2026-12-11T14:30:00-03:00\",\n  \"durationMinutes\": 30,\n  \"reason\": \"Control general\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo INVALID_REFERENCE\", () => pm.expect(pm.response.json().error.code).to.eql(\"INVALID_REFERENCE\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "12 - Doctor inexistente (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/appointments",
+            "description": "12 - Doctor inexistente (400)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": {{patientId}},\n  \"doctorId\": 2147483647,\n  \"scheduledAt\": \"2026-12-11T14:30:00-03:00\",\n  \"durationMinutes\": 30,\n  \"reason\": \"Control general\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo INVALID_REFERENCE\", () => pm.expect(pm.response.json().error.code).to.eql(\"INVALID_REFERENCE\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "13 - DoctorId invalido en search (400)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/appointments/search?doctorId=abc",
+            "description": "13 - DoctorId invalido en search (400)",
+            "body": {
+              "mode": "raw",
+              "raw": "\"pm.test(\\\"Codigo VALIDATION_ERROR\\\", () => pm.expect(pm.response.json().error.code).to.eql(\\\"VALIDATION_ERROR\\\"));\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "14 - Status invalido (400)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/appointments/{{appointmentId}}",
+            "description": "14 - Status invalido (400)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"INVALID\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo VALIDATION_ERROR\", () => pm.expect(pm.response.json().error.code).to.eql(\"VALIDATION_ERROR\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "15 - cancelledAt no se acepta (400)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/appointments/{{appointmentId}}",
+            "description": "15 - cancelledAt no se acepta (400)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cancelledAt\": \"2026-12-10T10:00:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo VALIDATION_ERROR\", () => pm.expect(pm.response.json().error.code).to.eql(\"VALIDATION_ERROR\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "16 - Paciente con turnos no se elimina (409)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/patients/{{patientId}}",
+            "description": "16 - Paciente con turnos no se elimina (409)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Conflicto referencial\",()=>pm.expect(pm.response.json().error.code).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "17 - Medico con turnos no se elimina (409)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/doctors/{{doctorId}}",
+            "description": "17 - Medico con turnos no se elimina (409)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Conflicto referencial\",()=>pm.expect(pm.response.json().error.code).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "18 - Cancelar turno (200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/appointments/{{appointmentId}}",
+            "description": "18 - Cancelar turno (200)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELLED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Cancelado con fecha\",()=>{const d=pm.response.json().data;pm.expect(d.status).to.eql(\"CANCELLED\");pm.expect(d.cancelledAt).to.be.a(\"string\").and.not.empty;});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "19 - Turno cancelado sigue existiendo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/appointments/{{appointmentId}}",
+            "description": "19 - Turno cancelado sigue existiendo"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Persistio cancelacion\",()=>{const d=pm.response.json().data;pm.expect(d.status).to.eql(\"CANCELLED\");pm.expect(d.cancelledAt).to.be.a(\"string\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "20 - Doble cancelacion (409)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/appointments/{{appointmentId}}",
+            "description": "20 - Doble cancelacion (409)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELLED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo APPOINTMENT_ALREADY_CANCELLED\", () => pm.expect(pm.response.json().error.code).to.eql(\"APPOINTMENT_ALREADY_CANCELLED\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "21 - Turno inexistente (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/appointments/2147483647",
+            "description": "21 - Turno inexistente (404)",
+            "body": {
+              "mode": "raw",
+              "raw": "\"pm.test(\\\"Codigo APPOINTMENT_NOT_FOUND\\\", () => pm.expect(pm.response.json().error.code).to.eql(\\\"APPOINTMENT_NOT_FOUND\\\"));\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "22 - ID invalido (400)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/appointments/abc",
+            "description": "22 - ID invalido (400)",
+            "body": {
+              "mode": "raw",
+              "raw": "\"pm.test(\\\"Codigo INVALID_ID\\\", () => pm.expect(pm.response.json().error.code).to.eql(\\\"INVALID_ID\\\"));\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "23 - Eliminar turno (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/appointments/{{appointmentId}}",
+            "description": "23 - Eliminar turno (204)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Sin body\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "24 - Turno eliminado (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/appointments/{{appointmentId}}",
+            "description": "24 - Turno eliminado (404)",
+            "body": {
+              "mode": "raw",
+              "raw": "\"pm.test(\\\"Codigo APPOINTMENT_NOT_FOUND\\\", () => pm.expect(pm.response.json().error.code).to.eql(\\\"APPOINTMENT_NOT_FOUND\\\"));\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "01 - Crear usuario (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users",
+            "description": "01 - Crear usuario (201)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman {{runId}}\",\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"name\"); pm.expect(data).to.have.property(\"email\"); pm.expect(data).to.have.property(\"role\");});",
+                  "pm.collectionVariables.set(\"userId\", data.id);",
+                  "pm.test(\"Sin password\",()=>pm.expect(pm.response.json().data).not.to.have.property(\"password\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02 - Obtener usuario",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/{{userId}}",
+            "description": "02 - Obtener usuario"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"name\"); pm.expect(data).to.have.property(\"email\"); pm.expect(data).to.have.property(\"role\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03 - Actualizar usuario",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/{{userId}}",
+            "description": "03 - Actualizar usuario",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Actualizado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "const data = pm.response.json().data;",
+                  "pm.expect(data).to.be.an(\"object\");",
+                  "pm.test(\"Campos esperados\", () => {pm.expect(data).to.have.property(\"id\"); pm.expect(data).to.have.property(\"name\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 - Buscar usuario",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/search?keywords=Postman",
+            "description": "04 - Buscar usuario"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Coleccion\",()=>pm.expect(pm.response.json().data).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05 - Listar usuarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users",
+            "description": "05 - Listar usuarios"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"Coleccion\",()=>pm.expect(pm.response.json().data).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06 - Email duplicado (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users",
+            "description": "06 - Email duplicado (409)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman {{runId}}\",\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo EMAIL_TAKEN\", () => pm.expect(pm.response.json().error.code).to.eql(\"EMAIL_TAKEN\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07 - Role no permitido en POST (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users",
+            "description": "07 - Role no permitido en POST (400)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman {{runId}}\",\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\",\n  \"role\": \"ROLE_ADMIN\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo VALIDATION_ERROR\", () => pm.expect(pm.response.json().error.code).to.eql(\"VALIDATION_ERROR\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08 - Body invalido (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users",
+            "description": "08 - Body invalido (400)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"no-es-email\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});",
+                  "pm.test(\"Codigo VALIDATION_ERROR\", () => pm.expect(pm.response.json().error.code).to.eql(\"VALIDATION_ERROR\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09 - Usuario inexistente (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/2147483647",
+            "description": "09 - Usuario inexistente (404)",
+            "body": {
+              "mode": "raw",
+              "raw": "\"pm.test(\\\"Codigo USER_NOT_FOUND\\\", () => pm.expect(pm.response.json().error.code).to.eql(\\\"USER_NOT_FOUND\\\"));\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10 - ID invalido (400)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/abc",
+            "description": "10 - ID invalido (400)",
+            "body": {
+              "mode": "raw",
+              "raw": "\"pm.test(\\\"Codigo INVALID_ID\\\", () => pm.expect(pm.response.json().error.code).to.eql(\\\"INVALID_ID\\\"));\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "01 - Login con usuario de prueba",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "01 - Login con usuario de prueba",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta JSON valida\", () => {const json=pm.response.json(); pm.expect(json).to.have.property(\"data\");});",
+                  "pm.test(\"No se expone password\",()=>pm.expect(pm.response.text()).not.to.include(\"\\\"password\\\"\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Limpieza",
+      "item": [
+        {
+          "name": "01 - Eliminar paciente (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/patients/{{patientId}}",
+            "description": "01 - Eliminar paciente (204)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Sin body\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02 - Eliminar medico (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/doctors/{{doctorId}}",
+            "description": "02 - Eliminar medico (204)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Sin body\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03 - Eliminar enfermero (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/nurses/{{nurseId}}",
+            "description": "03 - Eliminar enfermero (204)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Sin body\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 - Eliminar usuario (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/{{userId}}",
+            "description": "04 - Eliminar usuario (204)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Sin body\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05 - Confirmar paciente eliminado (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/patients/{{patientId}}",
+            "description": "05 - Confirmar paciente eliminado (404)",
+            "body": {
+              "mode": "raw",
+              "raw": "\"pm.test(\\\"Codigo PATIENT_NOT_FOUND\\\", () => pm.expect(pm.response.json().error.code).to.eql(\\\"PATIENT_NOT_FOUND\\\"));\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Error con code y message\", () => {const e=pm.response.json().error; pm.expect(e).to.have.property(\"code\"); pm.expect(e).to.have.property(\"message\");});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

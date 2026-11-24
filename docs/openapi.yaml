@@ -1,0 +1,1568 @@
+# Hospital API - OpenAPI contract - Clase 8 + existing Clase 7 routes
+openapi: 3.2.1
+info:
+  title: Hospital API
+  summary: Pacientes, médicos, enfermeros, turnos y especialidades
+  description: API REST educativa. Recursos de Users y Auth conservados de Clase 7. Los endpoints de CRUD y búsqueda
+    siguen el MVP de Clase 8.
+  version: 1.0.0
+servers:
+- url: http://localhost:3000
+  description: Local
+security: []
+tags:
+- name: Health
+  description: Estado del servicio
+- name: Users
+  description: Usuarios de Clase 7
+- name: Auth
+  description: Inicio de sesión heredado de Clase 7
+- name: Patients
+  description: Pacientes
+- name: Doctors
+  description: Médicos y especialidad
+- name: Nurses
+  description: Enfermeros
+- name: Appointments
+  description: Turnos entre pacientes y médicos
+- name: Specialties
+  description: Catálogo de solo lectura
+paths:
+  /api/health:
+    get:
+      tags:
+      - Health
+      summary: Health check
+      operationId: getHealth
+      responses:
+        '200':
+          description: API is up
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - status
+                properties:
+                  status:
+                    type: string
+                    examples:
+                    - ok
+              example:
+                status: ok
+  /api/patients:
+    get:
+      tags:
+      - Patients
+      summary: listPatients
+      operationId: listPatients
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Patient'
+              example:
+                data:
+                - &id001
+                  id: 1
+                  firstName: Ada
+                  lastName: Lovelace
+                  documentNumber: '30111222'
+                  birthDate: '1985-12-10'
+    post:
+      tags:
+      - Patients
+      summary: createPatient
+      operationId: createPatient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientInput'
+            example:
+              firstName: Ada
+              lastName: Lovelace
+              documentNumber: '30111222'
+              birthDate: '1985-12-10'
+      responses:
+        '201':
+          description: Created
+          headers:
+            Location:
+              description: URL of the created resource
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Patient'
+              example:
+                data: *id001
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/patients/search:
+    get:
+      tags:
+      - Patients
+      summary: searchPatients
+      operationId: searchPatients
+      parameters:
+      - name: keywords
+        in: query
+        required: false
+        schema:
+          type: string
+          examples:
+          - house
+        description: Case-insensitive partial first/last name match
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Patient'
+              example:
+                data:
+                - *id001
+  /api/patients/{id}:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    get:
+      tags:
+      - Patients
+      summary: getPatientById
+      operationId: getPatientById
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Patient'
+              example:
+                data: *id001
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+      - Patients
+      summary: updatePatient
+      operationId: updatePatient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientUpdate'
+            example:
+              lastName: Fernández
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Patient'
+              example:
+                data: *id001
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags:
+      - Patients
+      summary: deletePatient
+      operationId: deletePatient
+      responses:
+        '204':
+          description: Deleted successfully; no response body
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/doctors:
+    get:
+      tags:
+      - Doctors
+      summary: listDoctors
+      operationId: listDoctors
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Doctor'
+              example:
+                data:
+                - &id002
+                  id: 1
+                  firstName: Gregory
+                  lastName: House
+                  licenseNumber: MN-88421
+                  specialty:
+                    id: 1
+                    name: Cardiología
+    post:
+      tags:
+      - Doctors
+      summary: createDoctor
+      operationId: createDoctor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DoctorInput'
+            example:
+              firstName: Gregory
+              lastName: House
+              licenseNumber: MN-88421
+              specialtyId: 1
+      responses:
+        '201':
+          description: Created
+          headers:
+            Location:
+              description: URL of the created resource
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Doctor'
+              example:
+                data: *id002
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/doctors/search:
+    get:
+      tags:
+      - Doctors
+      summary: searchDoctors
+      operationId: searchDoctors
+      parameters:
+      - name: keywords
+        in: query
+        required: false
+        schema:
+          type: string
+          examples:
+          - house
+        description: Case-insensitive partial first/last name match
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Doctor'
+              example:
+                data:
+                - *id002
+  /api/doctors/{id}:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    get:
+      tags:
+      - Doctors
+      summary: getDoctorById
+      operationId: getDoctorById
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Doctor'
+              example:
+                data: *id002
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+      - Doctors
+      summary: updateDoctor
+      operationId: updateDoctor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DoctorUpdate'
+            example:
+              lastName: House
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Doctor'
+              example:
+                data: *id002
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags:
+      - Doctors
+      summary: deleteDoctor
+      operationId: deleteDoctor
+      responses:
+        '204':
+          description: Deleted successfully; no response body
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/nurses:
+    get:
+      tags:
+      - Nurses
+      summary: listNurses
+      operationId: listNurses
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Nurse'
+              example:
+                data:
+                - &id003
+                  id: 1
+                  firstName: Florence
+                  lastName: Nightingale
+                  licenseNumber: EN-10234
+    post:
+      tags:
+      - Nurses
+      summary: createNurse
+      operationId: createNurse
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NurseInput'
+            example:
+              firstName: Florence
+              lastName: Nightingale
+              licenseNumber: EN-10234
+      responses:
+        '201':
+          description: Created
+          headers:
+            Location:
+              description: URL of the created resource
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Nurse'
+              example:
+                data: *id003
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/nurses/search:
+    get:
+      tags:
+      - Nurses
+      summary: searchNurses
+      operationId: searchNurses
+      parameters:
+      - name: keywords
+        in: query
+        required: false
+        schema:
+          type: string
+          examples:
+          - house
+        description: Case-insensitive partial first/last name match
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Nurse'
+              example:
+                data:
+                - *id003
+  /api/nurses/{id}:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    get:
+      tags:
+      - Nurses
+      summary: getNurseById
+      operationId: getNurseById
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Nurse'
+              example:
+                data: *id003
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+      - Nurses
+      summary: updateNurse
+      operationId: updateNurse
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NurseUpdate'
+            example:
+              lastName: Smith
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Nurse'
+              example:
+                data: *id003
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags:
+      - Nurses
+      summary: deleteNurse
+      operationId: deleteNurse
+      responses:
+        '204':
+          description: Deleted successfully; no response body
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/appointments:
+    get:
+      tags:
+      - Appointments
+      summary: listAppointments
+      operationId: listAppointments
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Appointment'
+              example:
+                data:
+                - &id004
+                  id: 1
+                  scheduledAt: '2026-12-10T17:30:00.000Z'
+                  durationMinutes: 30
+                  reason: Control general
+                  status: SCHEDULED
+                  cancelledAt: null
+                  patient:
+                    id: 1
+                    firstName: Ada
+                    lastName: Lovelace
+                  doctor:
+                    id: 1
+                    firstName: Gregory
+                    lastName: House
+    post:
+      tags:
+      - Appointments
+      summary: createAppointment
+      operationId: createAppointment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentInput'
+            example:
+              patientId: 1
+              doctorId: 1
+              scheduledAt: '2026-12-10T14:30:00-03:00'
+              durationMinutes: 30
+              reason: Control general
+      responses:
+        '201':
+          description: Created
+          headers:
+            Location:
+              description: URL of the created resource
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Appointment'
+              example:
+                data: *id004
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/appointments/search:
+    get:
+      tags:
+      - Appointments
+      summary: searchAppointments
+      operationId: searchAppointments
+      parameters:
+      - name: doctorId
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+        description: Filter by doctor ID
+      - name: date
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+          examples:
+          - '2026-12-10'
+        description: UTC calendar day in current implementation; range [00:00, next 00:00)
+      - name: documentNumber
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^[0-9]{7,10}$
+          examples:
+          - '30111222'
+        description: Exact patient document number
+      - name: patientName
+        in: query
+        required: false
+        schema:
+          type: string
+          minLength: 2
+          examples:
+          - Ada
+        description: Case-insensitive partial match on patient first or last name
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Appointment'
+              example:
+                data:
+                - *id004
+        '400':
+          $ref: '#/components/responses/ValidationError'
+  /api/appointments/{id}:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    get:
+      tags:
+      - Appointments
+      summary: getAppointmentById
+      operationId: getAppointmentById
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Appointment'
+              example:
+                data: *id004
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+      - Appointments
+      summary: updateAppointment
+      operationId: updateAppointment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentUpdate'
+            example:
+              status: CANCELLED
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Appointment'
+              example:
+                data: *id004
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags:
+      - Appointments
+      summary: deleteAppointment
+      operationId: deleteAppointment
+      responses:
+        '204':
+          description: Deleted successfully; no response body
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/specialties:
+    get:
+      tags:
+      - Specialties
+      summary: listSpecialties
+      operationId: listSpecialties
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SpecialtyRef'
+              example:
+                data:
+                - &id005
+                  id: 1
+                  name: Cardiología
+  /api/specialties/{id}:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    get:
+      tags:
+      - Specialties
+      summary: getSpecialtyById
+      operationId: getSpecialtyById
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SpecialtyRef'
+              example:
+                data: *id005
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/users:
+    get:
+      tags:
+      - Users
+      summary: listUsers
+      operationId: listUsers
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+              example:
+                data:
+                - &id006
+                  id: 1
+                  name: Tomás Fernández
+                  email: tomas@gmail.com
+                  role: ROLE_USER
+    post:
+      tags:
+      - Users
+      summary: createUser
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+            example:
+              name: Tomás Fernández
+              email: tomas@gmail.com
+              password: example-password-123
+      responses:
+        '201':
+          description: Created
+          headers:
+            Location:
+              description: URL of the created resource
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+              example:
+                data: *id006
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/users/search:
+    get:
+      tags:
+      - Users
+      summary: searchUsers
+      operationId: searchUsers
+      parameters:
+      - name: keywords
+        in: query
+        required: false
+        schema:
+          type: string
+          examples:
+          - tomas
+        description: Search by name or email, case-insensitive
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+              example:
+                data:
+                - *id006
+  /api/users/{id}:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    get:
+      tags:
+      - Users
+      summary: getUserById
+      operationId: getUserById
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+              example:
+                data: *id006
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+      - Users
+      summary: updateUser
+      operationId: updateUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+            example:
+              name: Tomás F.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+              example:
+                data: *id006
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags:
+      - Users
+      summary: deleteUser
+      operationId: deleteUser
+      responses:
+        '204':
+          description: Deleted successfully; no response body
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/users/{id}/role:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    patch:
+      tags:
+      - Users
+      summary: assignUserRole
+      operationId: assignUserRole
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleAssignment'
+            example:
+              role: ROLE_ADMIN
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+              example:
+                data: *id006
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/auth/login:
+    post:
+      tags:
+      - Auth
+      summary: login
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginInput'
+            example:
+              email: tomas@gmail.com
+              password: example-password-123
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+              example:
+                data: *id006
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      description: Positive integer identifier
+      schema:
+        type: integer
+        minimum: 1
+  schemas:
+    Error:
+      type: object
+      additionalProperties: true
+      required:
+      - error
+      properties:
+        error:
+          type: object
+          additionalProperties: true
+          required:
+          - code
+          - message
+          properties:
+            code:
+              type: string
+              examples:
+              - VALIDATION_ERROR
+            message:
+              type: string
+              examples:
+              - Invalid request body
+            details:
+              type: array
+              items:
+                type: string
+    PatientInput:
+      type: object
+      additionalProperties: false
+      required:
+      - firstName
+      - lastName
+      - documentNumber
+      - birthDate
+      properties: &id007
+        firstName: &id008
+          type: string
+          minLength: 2
+          maxLength: 120
+          examples:
+          - Ada
+        lastName: &id009
+          type: string
+          minLength: 2
+          maxLength: 120
+          examples:
+          - Lovelace
+        documentNumber: &id010
+          type: string
+          pattern: ^[0-9]{7,10}$
+          examples:
+          - '30111222'
+        birthDate: &id011
+          type: string
+          format: date
+          examples:
+          - '1985-12-10'
+    PatientUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties: *id007
+    Patient:
+      type: object
+      additionalProperties: true
+      required:
+      - id
+      - firstName
+      - lastName
+      - documentNumber
+      - birthDate
+      properties:
+        id:
+          type: integer
+          examples:
+          - 1
+        firstName: *id008
+        lastName: *id009
+        documentNumber: *id010
+        birthDate: *id011
+    SpecialtyRef:
+      type: object
+      additionalProperties: true
+      required:
+      - id
+      - name
+      properties:
+        id:
+          type: integer
+          examples:
+          - 1
+        name:
+          type: string
+          examples:
+          - Cardiología
+    DoctorInput:
+      type: object
+      additionalProperties: false
+      required:
+      - firstName
+      - lastName
+      - licenseNumber
+      - specialtyId
+      properties: &id012
+        firstName:
+          type: string
+          minLength: 2
+          maxLength: 120
+          examples:
+          - Gregory
+        lastName:
+          type: string
+          minLength: 2
+          maxLength: 120
+          examples:
+          - House
+        licenseNumber:
+          type: string
+          minLength: 4
+          maxLength: 20
+          examples:
+          - MN-88421
+        specialtyId:
+          type: integer
+          minimum: 1
+          examples:
+          - 1
+    DoctorUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties: *id012
+    Doctor:
+      type: object
+      additionalProperties: true
+      required:
+      - id
+      - firstName
+      - lastName
+      - licenseNumber
+      - specialty
+      properties:
+        id:
+          type: integer
+          examples:
+          - 1
+        firstName:
+          type: string
+          examples:
+          - Gregory
+        lastName:
+          type: string
+          examples:
+          - House
+        licenseNumber:
+          type: string
+          examples:
+          - MN-88421
+        specialty:
+          $ref: '#/components/schemas/SpecialtyRef'
+    NurseInput:
+      type: object
+      additionalProperties: false
+      required:
+      - firstName
+      - lastName
+      - licenseNumber
+      properties: &id013
+        firstName: &id014
+          type: string
+          minLength: 2
+          maxLength: 120
+          examples:
+          - Florence
+        lastName: &id015
+          type: string
+          minLength: 2
+          maxLength: 120
+          examples:
+          - Nightingale
+        licenseNumber: &id016
+          type: string
+          minLength: 4
+          maxLength: 20
+          examples:
+          - EN-10234
+    NurseUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties: *id013
+    Nurse:
+      type: object
+      additionalProperties: true
+      required:
+      - id
+      - firstName
+      - lastName
+      - licenseNumber
+      properties:
+        id:
+          type: integer
+          examples:
+          - 1
+        firstName: *id014
+        lastName: *id015
+        licenseNumber: *id016
+    PatientRef:
+      type: object
+      additionalProperties: true
+      required:
+      - id
+      - firstName
+      - lastName
+      properties:
+        id:
+          type: integer
+          examples:
+          - 1
+        firstName:
+          type: string
+          examples:
+          - Ada
+        lastName:
+          type: string
+          examples:
+          - Lovelace
+    DoctorRef:
+      type: object
+      additionalProperties: true
+      required:
+      - id
+      - firstName
+      - lastName
+      properties:
+        id:
+          type: integer
+          examples:
+          - 1
+        firstName:
+          type: string
+          examples:
+          - Gregory
+        lastName:
+          type: string
+          examples:
+          - House
+    AppointmentStatus:
+      type: string
+      enum:
+      - SCHEDULED
+      - CANCELLED
+      - COMPLETED
+      - NO_SHOW
+      examples:
+      - SCHEDULED
+    AppointmentInput:
+      type: object
+      additionalProperties: false
+      required:
+      - patientId
+      - doctorId
+      - scheduledAt
+      properties:
+        patientId:
+          type: integer
+          minimum: 1
+          examples:
+          - 1
+        doctorId:
+          type: integer
+          minimum: 1
+          examples:
+          - 1
+        scheduledAt:
+          type: string
+          format: date-time
+          examples:
+          - '2026-12-10T14:30:00-03:00'
+        durationMinutes:
+          type: integer
+          minimum: 5
+          maximum: 240
+          examples:
+          - 30
+          default: 30
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 255
+          examples:
+          - Control general
+    AppointmentUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        doctorId:
+          type: integer
+          minimum: 1
+          examples:
+          - 1
+        scheduledAt:
+          type: string
+          format: date-time
+        durationMinutes:
+          type: integer
+          minimum: 5
+          maximum: 240
+        reason:
+          type:
+          - string
+          - 'null'
+          minLength: 3
+          maxLength: 255
+        status:
+          $ref: '#/components/schemas/AppointmentStatus'
+    Appointment:
+      type: object
+      additionalProperties: true
+      required:
+      - id
+      - scheduledAt
+      - durationMinutes
+      - status
+      - patient
+      - doctor
+      properties:
+        id:
+          type: integer
+          examples:
+          - 1
+        scheduledAt:
+          type: string
+          format: date-time
+          examples:
+          - '2026-12-10T17:30:00.000Z'
+        durationMinutes:
+          type: integer
+          examples:
+          - 30
+        reason:
+          type:
+          - string
+          - 'null'
+        status:
+          $ref: '#/components/schemas/AppointmentStatus'
+        cancelledAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        patient:
+          $ref: '#/components/schemas/PatientRef'
+        doctor:
+          $ref: '#/components/schemas/DoctorRef'
+    UserInput:
+      type: object
+      additionalProperties: false
+      required:
+      - name
+      - email
+      - password
+      properties: &id017
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+          examples:
+          - Tomás Fernández
+        email:
+          type: string
+          maxLength: 255
+          format: email
+          examples:
+          - tomas@gmail.com
+        password:
+          type: string
+          minLength: 8
+          maxLength: 72
+          examples:
+          - example-password-123
+    UserUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties: *id017
+    User:
+      type: object
+      additionalProperties: true
+      required:
+      - id
+      - name
+      - email
+      - role
+      properties:
+        id:
+          type: integer
+          examples:
+          - 1
+        name:
+          type: string
+          examples:
+          - Tomás Fernández
+        email:
+          type: string
+          format: email
+          examples:
+          - tomas@gmail.com
+        role:
+          type: string
+          enum:
+          - ROLE_USER
+          - ROLE_ADMIN
+          examples:
+          - ROLE_USER
+    RoleAssignment:
+      type: object
+      additionalProperties: false
+      required:
+      - role
+      properties:
+        role:
+          type: string
+          enum:
+          - ROLE_USER
+          - ROLE_ADMIN
+          examples:
+          - ROLE_ADMIN
+    LoginInput:
+      type: object
+      additionalProperties: false
+      required:
+      - email
+      - password
+      properties:
+        email:
+          type: string
+          format: email
+          examples:
+          - tomas@gmail.com
+        password:
+          type: string
+          examples:
+          - example-password-123
+  responses:
+    ValidationError:
+      description: Invalid request body, query, or ID
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: VALIDATION_ERROR
+              message: Invalid request body
+    Conflict:
+      description: Duplicate value, occupied doctor slot, or referenced resource in use
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: DOCUMENT_NUMBER_TAKEN
+              message: Value is already registered
+    NotFound:
+      description: Resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: PATIENT_NOT_FOUND
+              message: Patient not found
+    Unauthorized:
+      description: Invalid login credentials
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: INVALID_CREDENTIALS
+              message: Invalid credentials
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: FORBIDDEN
+              message: Insufficient permissions
