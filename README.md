@@ -1,11 +1,10 @@
+# 🏥 Hospital API
 
-# Hospital API
+API REST para la gestión de recursos hospitalarios, desarrollada con **Node.js, Express, Sequelize y PostgreSQL**.
 
-API REST para la gestión de recursos hospitalarios, desarrollada con Node.js, Express, Sequelize y PostgreSQL.
+El proyecto permite administrar usuarios, pacientes, médicos, enfermeros, especialidades y turnos médicos, aplicando validaciones de datos, relaciones entre entidades, restricciones de integridad y manejo centralizado de errores.
 
-El proyecto permite administrar usuarios, pacientes, médicos, enfermeros, especialidades y turnos médicos, aplicando validaciones, relaciones entre entidades, restricciones de integridad y manejo centralizado de errores.
-
-Incluye documentación interactiva con Swagger UI, especificación OpenAPI, una colección de pruebas con Postman y una suite de 41 tests automatizados.
+Incluye documentación interactiva mediante **Swagger UI y OpenAPI**, pruebas con Postman y una suite de **41 tests automatizados**.
 
 ## 1. Tecnologías utilizadas
 
@@ -14,19 +13,21 @@ Incluye documentación interactiva con Swagger UI, especificación OpenAPI, una 
 | Node.js 26.x | Entorno de ejecución de JavaScript |
 | Express 5 | Framework para desarrollar la API REST |
 | PostgreSQL 16 | Base de datos relacional |
-| Sequelize 6 | ORM para interactuar con PostgreSQL |
+| Sequelize 6 | ORM para gestionar los modelos y sus relaciones |
 | Yup 1 | Validación de datos de entrada |
-| bcrypt | Hash de contraseñas |
-| Docker Compose | Gestión del contenedor de PostgreSQL |
-| Swagger UI / OpenAPI | Documentación de la API |
-| node:test | Framework de tests integrado en Node.js |
-| Supertest | Pruebas HTTP automatizadas |
+| bcrypt 6 | Hash de contraseñas |
+| Docker Compose | Administración de PostgreSQL mediante contenedores |
+| Swagger UI / OpenAPI | Documentación de endpoints y contratos HTTP |
+| node:test | Framework nativo de testing de Node.js |
+| Supertest 7 | Pruebas HTTP automatizadas |
+| CORS | Configuración de orígenes permitidos |
+| dotenv | Administración de variables de entorno |
 
 El proyecto utiliza **JavaScript con ES Modules**.
 
 ## 2. Arquitectura
 
-La aplicación sigue una arquitectura en capas:
+La aplicación sigue una arquitectura por capas:
 
 ```text
 HTTP Request
@@ -47,24 +48,30 @@ HTTP Request
  PostgreSQL
 ```
 
-Cada capa tiene una responsabilidad específica:
+Cada capa cumple una responsabilidad específica:
 
-- **Routes:** definen los endpoints disponibles.
-- **Middlewares:** validan datos, identificadores y errores.
-- **Controllers:** gestionan las solicitudes y respuestas HTTP.
-- **DTOs:** definen los datos permitidos de entrada y salida.
-- **Models:** representan las entidades y sus relaciones.
-- **Database:** configura Sequelize y la conexión a PostgreSQL.
+- **Routes:** definen las rutas y los métodos HTTP.
+- **Middlewares:** validan las solicitudes, procesan identificadores y gestionan errores.
+- **Controllers:** coordinan las operaciones y construyen las respuestas HTTP.
+- **DTOs:** definen los datos de entrada permitidos y los campos expuestos.
+- **Models:** representan las entidades del sistema y sus asociaciones.
+- **Database:** configura la conexión con PostgreSQL mediante Sequelize.
 
-Las respuestas exitosas utilizan, en general, la estructura:
+### Formato de respuestas
+
+Las respuestas exitosas que devuelven recursos utilizan el formato:
 
 ```json
 {
-  "data": {}
+  "data": {
+    "id": 1
+  }
 }
 ```
 
-Los errores siguen un formato consistente:
+Las operaciones de eliminación exitosas devuelven HTTP `204 No Content`.
+
+Los errores utilizan una estructura consistente:
 
 ```json
 {
@@ -75,87 +82,85 @@ Los errores siguen un formato consistente:
 }
 ```
 
-Algunos errores de validación también incluyen un campo `details`.
+Los errores de validación también pueden incluir un arreglo `details`.
 
 ## 3. Funcionalidades
 
 ### Usuarios
 
-- Crear usuarios.
-- Listar y consultar usuarios.
+- Crear, listar, consultar, actualizar y eliminar usuarios.
 - Buscar usuarios por nombre o email.
-- Actualizar y eliminar usuarios.
 - Validar emails únicos.
-- Almacenar contraseñas mediante hashes.
-- Iniciar sesión con email y contraseña.
-- Gestionar roles `ROLE_USER` y `ROLE_ADMIN`.
+- Almacenar contraseñas hasheadas mediante bcrypt.
+- Iniciar sesión utilizando email y contraseña.
+- Gestionar los roles `ROLE_USER` y `ROLE_ADMIN`.
 - Evitar exponer contraseñas y hashes en las respuestas.
 
 ### Pacientes
 
-- Crear pacientes.
-- Listar y consultar pacientes.
+- Registrar pacientes.
+- Consultar pacientes por identificador.
+- Listar pacientes ordenados por ID.
 - Actualizar parcialmente sus datos.
-- Eliminar pacientes sin turnos asociados.
 - Validar documentos de identidad únicos.
 - Validar fechas de nacimiento.
-- Impedir la eliminación de pacientes que tengan turnos.
+- Eliminar pacientes sin turnos asociados.
+- Impedir la eliminación de pacientes que tengan turnos registrados.
 
 ### Especialidades
 
 - Registrar especialidades médicas.
 - Consultar el catálogo de especialidades.
 - Asociar médicos con especialidades.
-- Mantener la integridad referencial entre médicos y especialidades.
+- Mantener la integridad referencial entre especialidades y médicos.
 
 ### Médicos
 
-- Crear médicos.
-- Listar y consultar médicos.
-- Asociarlos con una especialidad existente.
+- Registrar médicos.
+- Consultar y listar médicos.
+- Asociar cada médico con una especialidad existente.
 - Validar matrículas profesionales únicas.
-- Devolver la especialidad como objeto anidado.
-- Rechazar referencias a especialidades inexistentes.
+- Devolver información anidada de la especialidad.
+- Rechazar especialidades inexistentes.
 
 ### Enfermeros
 
-- Crear enfermeros.
-- Listar y consultar enfermeros.
+- Registrar enfermeros.
+- Consultar y listar enfermeros.
 - Validar matrículas profesionales únicas.
-- Aplicar validaciones sobre los datos ingresados.
+- Rechazar datos incompletos o inválidos.
 
 ### Turnos médicos
 
 - Crear turnos vinculados con pacientes y médicos.
-- Consultar y listar turnos.
-- Mostrar información anidada del médico y paciente.
-- Filtrar turnos por médico, fecha, documento y nombre del paciente.
-- Combinar diferentes criterios de búsqueda.
+- Consultar, listar y eliminar turnos.
+- Mostrar información anidada de pacientes y médicos.
+- Filtrar por médico, fecha, documento y nombre del paciente.
+- Combinar múltiples criterios de búsqueda.
 - Ordenar turnos por fecha ascendente.
-- Evitar turnos duplicados para el mismo médico en el mismo horario.
+- Evitar que un médico tenga dos turnos a la misma hora exacta.
 - Cancelar turnos sin eliminarlos.
-- Registrar la fecha de cancelación.
-- Evitar cancelar dos veces el mismo turno.
-- Eliminar turnos cuando corresponda.
+- Registrar automáticamente la fecha de cancelación.
+- Impedir cancelar dos veces el mismo turno.
 
 ## 4. Modelo de datos
 
-El sistema contiene seis entidades principales:
+El sistema está compuesto por seis entidades principales:
 
 | Entidad | Descripción |
 |---|---|
-| User | Usuarios del sistema |
-| Patient | Información de pacientes |
-| Specialty | Especialidades médicas |
-| Doctor | Médicos registrados |
-| Nurse | Enfermeros registrados |
-| Appointment | Turnos médicos |
+| `User` | Usuarios del sistema |
+| `Patient` | Pacientes del hospital |
+| `Specialty` | Especialidades médicas |
+| `Doctor` | Médicos registrados |
+| `Nurse` | Enfermeros registrados |
+| `Appointment` | Turnos médicos |
 
 ### Relaciones
 
 **Specialty — Doctor (1:N)**
 
-Una especialidad puede tener múltiples médicos, pero cada médico pertenece a una única especialidad.
+Una especialidad puede tener múltiples médicos, mientras que cada médico pertenece a una única especialidad.
 
 **Patient — Appointment (1:N)**
 
@@ -165,25 +170,31 @@ Un paciente puede tener múltiples turnos, pero cada turno pertenece a un único
 
 Un médico puede atender múltiples turnos, pero cada turno está asignado a un único médico.
 
-La relación entre pacientes y médicos es de muchos a muchos (**N:M**) a través de los turnos médicos.
+**Patient — Doctor (N:M)**
+
+La relación entre pacientes y médicos se resuelve mediante `Appointment`, una entidad intermedia que almacena información propia del turno.
+
+Los modelos `User` y `Nurse` son independientes de estas asociaciones en el MVP.
 
 ### Restricciones de integridad
 
-PostgreSQL controla restricciones como:
+PostgreSQL garantiza:
 
-- Documento de paciente único.
-- Matrícula profesional única.
-- Email de usuario único.
-- Especialidades obligatorias para médicos.
-- Pacientes y médicos obligatorios para turnos.
-- Horario único por médico para un mismo instante.
-- Restricciones de eliminación entre entidades relacionadas.
+- Email único para usuarios.
+- Documento único para pacientes.
+- Matrícula única para médicos y enfermeros.
+- Especialidades válidas para médicos.
+- Pacientes y médicos existentes para cada turno.
+- Horario único por médico mediante la combinación `doctor_id` y `scheduled_at`.
+- Restricciones de eliminación para entidades relacionadas.
+
+La restricción de horarios impide dos turnos exactamente a la misma hora, pero no detecta por sí sola todos los posibles solapamientos entre intervalos.
 
 ### Tipos ENUM
 
 El proyecto utiliza tipos ENUM nativos de PostgreSQL.
 
-Roles de usuario:
+**Roles de usuario:**
 
 ```sql
 CREATE TYPE user_role AS ENUM (
@@ -192,7 +203,7 @@ CREATE TYPE user_role AS ENUM (
 );
 ```
 
-Estados de turnos:
+**Estados de turnos:**
 
 ```sql
 CREATE TYPE appointment_status AS ENUM (
@@ -203,38 +214,34 @@ CREATE TYPE appointment_status AS ENUM (
 );
 ```
 
-Los tipos deben existir antes de crear las tablas que los utilizan.
+Ambos tipos se preparan durante la sincronización del esquema.
 
 ## 5. Requisitos previos
 
-Para ejecutar el proyecto necesitás:
+Para ejecutar el proyecto se necesita:
 
-- Node.js 26.x.
-- npm.
-- Docker Desktop.
-- Git.
-- Un cliente de PostgreSQL opcional, como DBeaver, pgAdmin o TablePlus.
+- Node.js 26.x
+- npm
+- Git
+- Docker Desktop
 
-Verificá la instalación de Node.js y npm:
+Opcionalmente, se puede utilizar un cliente SQL como DBeaver, TablePlus o pgAdmin.
+
+Verificar las herramientas instaladas:
 
 ```bash
 node --version
 npm --version
-```
-
-Verificá Docker:
-
-```bash
 docker --version
 docker compose version
 ```
 
-## 6. Instalación
+## 6. Instalación y configuración
 
 ### Paso 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/tomasfernanddez/Hospital-API
+git clone https://github.com/tomasfernanddez/Hospital-API.git
 cd Hospital-API
 ```
 
@@ -244,9 +251,11 @@ cd Hospital-API
 npm install
 ```
 
+Este comando instala las dependencias definidas en `package.json`.
+
 ### Paso 3. Configurar las variables de entorno
 
-Creá el archivo `.env` a partir de `.env.example`:
+Crear un archivo `.env` a partir de `.env.example`.
 
 En PowerShell:
 
@@ -260,7 +269,7 @@ En Bash:
 cp .env.example .env
 ```
 
-Configurá las variables de conexión:
+Configurar las variables:
 
 ```dotenv
 PORT=3000
@@ -274,11 +283,22 @@ DB_PASSWORD=TU_PASSWORD
 DB_LOGGING=false
 ```
 
-La contraseña debe coincidir con la configuración de PostgreSQL utilizada por Docker Compose.
+| Variable | Descripción |
+|---|---|
+| `PORT` | Puerto donde se ejecuta la API |
+| `CORS_ORIGIN` | Orígenes permitidos para las solicitudes HTTP |
+| `DB_HOST` | Host de PostgreSQL |
+| `DB_PORT` | Puerto de PostgreSQL |
+| `DB_NAME` | Nombre de la base de datos |
+| `DB_USER` | Usuario de PostgreSQL |
+| `DB_PASSWORD` | Contraseña de PostgreSQL |
+| `DB_LOGGING` | Habilita o deshabilita los logs SQL |
 
-El puerto `5433` se utiliza para evitar conflictos con otras instalaciones locales de PostgreSQL.
+El puerto `5433` permite evitar conflictos con una instalación local de PostgreSQL que utilice `5432`.
 
-**Importante:** no subir `.env` ni contraseñas reales al repositorio.
+**Importante:** las credenciales de `.env` deben coincidir con la configuración de PostgreSQL utilizada por Docker Compose.
+
+No subir `.env` al repositorio.
 
 ### Paso 4. Levantar PostgreSQL
 
@@ -288,55 +308,101 @@ Desde la raíz del proyecto:
 docker compose up -d --wait
 ```
 
-Verificá el estado:
+Verificar el estado del contenedor:
 
 ```bash
 docker compose ps
 ```
 
-PostgreSQL debe estar funcionando antes de iniciar la API.
+La base de datos debe estar disponible antes de ejecutar los scripts de inicialización.
 
-### Paso 5. Preparar la base de datos
+Los datos persistidos en `./postgres/` sobreviven a la detención normal del contenedor.
 
-La base de desarrollo utiliza:
+No utilizar `docker compose down -v` si se desea conservar los datos de PostgreSQL.
 
-```text
-DB_NAME=nodepgdb
+### Paso 5. Sincronizar el esquema
+
+```bash
+npm run db:sync
 ```
 
-Prepará el esquema mediante el mecanismo de inicialización del proyecto.
+Este comando ejecuta:
 
-Si tenés configurado el script de reinicialización:
+```bash
+node scripts/db-sync.js
+```
+
+El script:
+
+1. Prepara el ENUM `user_role`, si no existe.
+2. Prepara el ENUM `appointment_status`, si no existe.
+3. Importa los modelos y sus asociaciones.
+4. Sincroniza las tablas mediante Sequelize.
+5. Cierra la conexión a PostgreSQL.
+
+### Paso 6. Cargar los datos iniciales
+
+```bash
+npm run db:seed
+```
+
+Este comando ejecuta:
+
+```bash
+node scripts/db-seed.js
+```
+
+Carga las siguientes especialidades:
+
+| ID | Especialidad |
+|---|---|
+| Generado por PostgreSQL | Cardiología |
+| Generado por PostgreSQL | Pediatría |
+| Generado por PostgreSQL | Clínica médica |
+| Generado por PostgreSQL | Diagnóstico clínico |
+| Generado por PostgreSQL | Traumatología |
+
+El script utiliza `ignoreDuplicates: true` para evitar repetir especialidades ya registradas, apoyándose en la restricción de unicidad de la base.
+
+### Reinicialización opcional
+
+También existe el comando:
 
 ```bash
 npm run db:reset
 ```
 
-**Advertencia:** este comando puede eliminar y recrear tablas. Usalo únicamente en una base de desarrollo cuyos datos puedas descartar.
+Este script ejecuta:
 
-Los tipos ENUM `user_role` y `appointment_status` deben estar creados antes de sincronizar los modelos.
+```bash
+node scripts/db-sync.js --force && node scripts/db-seed.js
+```
 
-### Paso 6. Iniciar el servidor
+**Advertencia:** `--force` elimina y recrea las tablas sincronizadas, lo que provoca la pérdida de sus datos.
 
-En modo desarrollo:
+Utilizarlo únicamente en una base de desarrollo cuyos datos puedan descartarse. No ejecutarlo en producción.
+
+### Paso 7. Iniciar la API
+
+Modo desarrollo:
 
 ```bash
 npm run dev
 ```
 
-En modo normal:
+Modo normal:
 
 ```bash
 npm start
 ```
 
-Con la configuración predeterminada, la API estará disponible en:
+Con la configuración predeterminada, el servidor estará disponible en:
 
 ```text
 http://localhost:3000
 ```
 
-Verificá el endpoint:
+Verificar su funcionamiento:
 
 ```http
 GET http://localhost:3000/api/health
@@ -350,9 +416,9 @@ Respuesta esperada:
 }
 ```
 
-## 7. Endpoints
+## 7. Endpoints de la API
 
-La ruta base de la API es:
+La URL base es:
 
 ```text
 http://localhost:3000/api
@@ -362,7 +428,7 @@ http://localhost:3000/api
 
 | Método | Endpoint | Descripción |
 |---|---|---|
-| GET | `/health` | Verificar el estado de la API |
+| GET | `/health` | Verificar el funcionamiento de la API |
 
 ### Usuarios
 
@@ -382,7 +448,7 @@ http://localhost:3000/api
 |---|---|---|
 | GET | `/specialties` | Listar especialidades |
 | GET | `/specialties/:id` | Consultar especialidad |
-| POST | `/specialties` | Crear especialidad |
+| POST | `/specialties` | Registrar especialidad |
 
 ### Pacientes
 
@@ -400,7 +466,7 @@ http://localhost:3000/api
 |---|---|---|
 | GET | `/doctors` | Listar médicos |
 | GET | `/doctors/:id` | Consultar médico |
-| POST | `/doctors` | Crear médico |
+| POST | `/doctors` | Registrar médico |
 
 ### Enfermeros
 
@@ -408,7 +474,7 @@ http://localhost:3000/api
 |---|---|---|
 | GET | `/nurses` | Listar enfermeros |
 | GET | `/nurses/:id` | Consultar enfermero |
-| POST | `/nurses` | Crear enfermero |
+| POST | `/nurses` | Registrar enfermero |
 
 ### Turnos médicos
 
@@ -418,14 +484,14 @@ http://localhost:3000/api
 | GET | `/appointments/search` | Buscar y filtrar turnos |
 | GET | `/appointments/:id` | Consultar turno |
 | POST | `/appointments` | Crear turno |
-| PATCH | `/appointments/:id` | Actualizar estado |
+| PATCH | `/appointments/:id` | Actualizar estado del turno |
 | DELETE | `/appointments/:id` | Eliminar turno |
 
-Los parámetros, esquemas de entrada, respuestas y códigos de error están detallados en la documentación OpenAPI.
+Para conocer los parámetros, esquemas y respuestas detalladas, consultar la documentación OpenAPI.
 
 ## 8. Ejemplos de solicitudes
 
-### Crear paciente
+### Crear un paciente
 
 ```http
 POST /api/patients
@@ -441,11 +507,9 @@ Content-Type: application/json
 }
 ```
 
-Una creación exitosa devuelve HTTP `201 Created`.
+La API devuelve HTTP `201 Created` y los datos del paciente creado.
 
-### Crear médico
-
-Primero debe existir una especialidad médica.
+### Registrar un médico
 
 ```http
 POST /api/doctors
@@ -461,9 +525,9 @@ Content-Type: application/json
 }
 ```
 
-El `specialtyId` debe corresponder a una especialidad existente.
+La especialidad debe existir previamente.
 
-### Crear turno médico
+### Crear un turno médico
 
 ```http
 POST /api/appointments
@@ -480,7 +544,7 @@ Content-Type: application/json
 }
 ```
 
-Los IDs deben corresponder a un paciente y un médico existentes.
+El paciente y el médico deben existir.
 
 ### Buscar turnos
 
@@ -502,7 +566,7 @@ Por documento:
 GET /api/appointments/search?documentNumber=12345678
 ```
 
-Por nombre:
+Por nombre del paciente:
 
 ```http
 GET /api/appointments/search?patientName=Ada
@@ -514,7 +578,9 @@ Con filtros combinados:
 GET /api/appointments/search?doctorId=1&date=2026-12-10
 ```
 
-### Cancelar turno
+Los filtros pueden combinarse para obtener resultados que cumplan todas las condiciones.
+
+### Cancelar un turno
 
 ```http
 PATCH /api/appointments/1
@@ -527,15 +593,15 @@ Content-Type: application/json
 }
 ```
 
-La cancelación conserva el turno y registra `cancelledAt`.
+La API conserva el turno y registra la fecha de cancelación en `cancelledAt`.
 
-Si se intenta cancelar nuevamente, la API responde con un conflicto.
+Si el turno ya está cancelado, devuelve HTTP `409 Conflict`.
 
 ## 9. Manejo de errores
 
-La aplicación utiliza un middleware centralizado para transformar errores de validación, negocio y PostgreSQL en respuestas HTTP consistentes.
+La aplicación utiliza un middleware centralizado para traducir errores de validación, negocio y base de datos en respuestas HTTP.
 
-### Estructura
+### Ejemplo
 
 ```json
 {
@@ -547,14 +613,14 @@ La aplicación utiliza un middleware centralizado para transformar errores de va
 }
 ```
 
-### Códigos principales
+### Principales códigos de error
 
-| HTTP | Código | Significado |
+| HTTP | Código | Descripción |
 |---|---|---|
-| 400 | `VALIDATION_ERROR` | Datos de entrada inválidos |
+| 400 | `VALIDATION_ERROR` | Datos inválidos |
 | 400 | `INVALID_ID` | Identificador inválido |
 | 400 | `INVALID_JSON` | JSON mal formado |
-| 400 | `INVALID_REFERENCE` | Referencia a entidad inexistente |
+| 400 | `INVALID_REFERENCE` | Referencia inexistente |
 | 401 | `INVALID_CREDENTIALS` | Credenciales incorrectas |
 | 404 | `USER_NOT_FOUND` | Usuario inexistente |
 | 404 | `PATIENT_NOT_FOUND` | Paciente inexistente |
@@ -562,58 +628,67 @@ La aplicación utiliza un middleware centralizado para transformar errores de va
 | 409 | `EMAIL_TAKEN` | Email duplicado |
 | 409 | `DOCUMENT_NUMBER_TAKEN` | Documento duplicado |
 | 409 | `LICENSE_NUMBER_TAKEN` | Matrícula duplicada |
+| 409 | `SPECIALTY_NAME_TAKEN` | Especialidad duplicada |
 | 409 | `DOCTOR_SLOT_TAKEN` | Horario médico ocupado |
 | 409 | `APPOINTMENT_ALREADY_CANCELLED` | Turno ya cancelado |
 | 409 | `PATIENT_HAS_APPOINTMENTS` | Paciente con turnos asociados |
 | 500 | `INTERNAL_ERROR` | Error interno inesperado |
 
-## 10. Documentación OpenAPI y Swagger
+## 10. Documentación Swagger y OpenAPI
 
-El proyecto incluye documentación de los endpoints mediante OpenAPI.
+El proyecto incluye documentación de la API mediante OpenAPI.
 
 ### Swagger UI
 
-Con el servidor en ejecución:
+Con el servidor iniciado:
 
 ```text
 http://localhost:3000/docs
 ```
 
-Desde Swagger UI es posible consultar los endpoints, revisar los esquemas y ejecutar solicitudes HTTP.
+Desde Swagger UI se pueden:
 
-### Especificación OpenAPI
+- Consultar endpoints.
+- Revisar parámetros.
+- Inspeccionar esquemas de datos.
+- Consultar códigos de respuesta.
+- Ejecutar solicitudes HTTP.
+
+### Archivo OpenAPI
 
 ```text
 http://localhost:3000/openapi.yaml
 ```
 
-Este endpoint entrega la especificación YAML de la API.
+Este endpoint devuelve la especificación YAML de la API.
 
-Dependiendo del navegador, el archivo puede mostrarse directamente o descargarse automáticamente. Ambos comportamientos son válidos.
+Dependiendo del navegador, el archivo puede visualizarse directamente o descargarse. Ambos comportamientos son normales.
 
-## 11. Testing automatizado
+## 11. Tests automatizados
 
-El proyecto cuenta con **41 tests automatizados**, implementados con el framework nativo `node:test` y Supertest.
+El proyecto cuenta con **41 tests automatizados**, desarrollados mediante `node:test` y Supertest.
 
-Los tests realizan solicitudes HTTP sobre la aplicación Express y utilizan una base PostgreSQL independiente.
+Las pruebas realizan solicitudes HTTP directamente sobre Express y verifican el comportamiento real de la API utilizando PostgreSQL.
 
-### Base de datos de testing
+### Base de testing
 
-Para evitar modificar los datos de desarrollo, las pruebas utilizan:
+Se utiliza una base independiente:
 
 ```text
 hospital_test
 ```
 
-Esta base es independiente de `nodepgdb`.
+La base de desarrollo continúa siendo:
 
-**Nunca ejecutar los tests contra la base de desarrollo o producción.**
+```text
+nodepgdb
+```
+
+Esta separación evita que los tests modifiquen los registros de desarrollo.
 
 ### Crear la base de testing
 
-Con PostgreSQL funcionando, creá la base si todavía no existe.
-
-Por ejemplo:
+Con PostgreSQL iniciado:
 
 ```bash
 docker exec -it nodepgdb psql -U postgres -d postgres
@@ -625,9 +700,9 @@ Dentro de PostgreSQL:
 CREATE DATABASE hospital_test;
 ```
 
-Si ya existe, no es necesario volver a crearla.
+Si ya existe, no es necesario crearla nuevamente.
 
-Salí de PostgreSQL con:
+Para salir:
 
 ```text
 \q
@@ -635,7 +710,7 @@ Salí de PostgreSQL con:
 
 ### Configurar `.env.test`
 
-Creá un archivo `.env.test` en la raíz:
+Crear un archivo `.env.test` en la raíz del proyecto:
 
 ```dotenv
 NODE_ENV=test
@@ -648,16 +723,28 @@ DB_PASSWORD=TU_PASSWORD
 DB_LOGGING=false
 ```
 
-Las credenciales y el puerto deben coincidir con tu instancia de PostgreSQL.
+Adaptar las credenciales y el puerto a la instancia de PostgreSQL utilizada.
 
-La configuración de tests verifica que:
+**Importante:** este archivo debe estar incluido en `.gitignore`.
 
-- `NODE_ENV` sea `test`.
-- `DB_NAME` sea `hospital_test`.
-- Sequelize apunte a `hospital_test`.
-- PostgreSQL confirme que la conexión activa utiliza `hospital_test`.
+### Protección de la base de testing
 
-La preparación de pruebas puede eliminar y recrear las tablas de `hospital_test`.
+Antes de modificar las tablas, la configuración comprueba:
+
+1. Que `NODE_ENV` sea `test`.
+2. Que `DB_NAME` sea `hospital_test`.
+3. Que Sequelize esté configurado para `hospital_test`.
+4. Que PostgreSQL confirme que la base activa es `hospital_test`.
+
+La inicialización utiliza:
+
+```javascript
+sequelize.sync({ force: true });
+```
+
+Por esta razón, los datos existentes en `hospital_test` se eliminan al preparar las pruebas.
+
+**Nunca ejecutar estos tests contra una base de desarrollo o producción.**
 
 ### Ejecutar los tests
 
@@ -665,15 +752,15 @@ La preparación de pruebas puede eliminar y recrear las tablas de `hospital_test
 npm test
 ```
 
-El script utiliza:
+El comando configurado en `package.json` es:
 
 ```bash
 node --env-file=.env.test --test --test-concurrency=1
 ```
 
-La concurrencia entre archivos está deshabilitada porque las suites comparten la base de testing.
+La opción `--test-concurrency=1` evita que diferentes archivos de prueba preparen simultáneamente la misma base.
 
-### Organización
+### Organización de los tests
 
 ```text
 tests/
@@ -685,17 +772,17 @@ tests/
 └── users.test.js
 ```
 
-`setup.js` contiene las funciones para:
+El archivo `tests/setup.js` permite:
 
-- Verificar la base de testing.
+- Validar la conexión a `hospital_test`.
 - Crear los tipos ENUM necesarios.
 - Sincronizar los modelos.
 - Limpiar registros entre pruebas.
-- Cerrar las conexiones a PostgreSQL.
+- Cerrar correctamente las conexiones.
 
 ### Cobertura de pruebas
 
-| Módulo | Cantidad |
+| Módulo | Tests |
 |---|---:|
 | Health | 1 |
 | Patients | 11 |
@@ -704,21 +791,28 @@ tests/
 | Users | 6 |
 | **Total** | **41** |
 
-Entre los escenarios verificados están:
+### Escenarios verificados
 
-- Creación y consulta de recursos.
+Los tests cubren:
+
+- Creación y consulta de entidades.
 - Validación de datos obligatorios.
 - Rechazo de campos desconocidos.
-- Detección de documentos, emails y matrículas duplicados.
-- Validación de referencias inexistentes.
-- Relaciones anidadas entre entidades.
+- Validación de identificadores.
+- Documentos duplicados.
+- Emails duplicados.
+- Matrículas duplicadas.
+- Referencias inexistentes.
+- Relaciones entre pacientes, médicos y especialidades.
 - Restricciones de horarios médicos.
-- Búsquedas por diferentes filtros.
+- Filtros de búsqueda.
+- Ordenamiento por fecha.
 - Cancelación de turnos.
-- Restricciones al eliminar pacientes.
-- Ordenamiento de resultados.
-- Regresión de los endpoints de usuarios.
-- Protección de contraseñas en respuestas HTTP.
+- Prevención de cancelaciones duplicadas.
+- Eliminación de recursos.
+- Restricciones de integridad referencial.
+- Regresión de funcionalidades de usuarios.
+- Protección de contraseñas en respuestas.
 
 ### Resultado verificado
 
@@ -731,40 +825,72 @@ cancelled 0
 
 ### Repetibilidad
 
-Para comprobar que la suite no depende de datos anteriores, ejecutala dos veces:
+Para comprobar que las pruebas no dependen de datos previos:
 
 ```bash
 npm test
 npm test
 ```
 
-Ambas ejecuciones deben terminar exitosamente.
+Ambas ejecuciones deben finalizar correctamente.
 
 ## 12. Pruebas con Postman
 
-Además de los tests automatizados, el proyecto fue validado utilizando Postman.
+Además de los tests automatizados, la API fue validada con Postman Collection Runner.
 
-La colección de la Clase 8 se ejecutó mediante Collection Runner con:
+### Resultado obtenido
 
-```text
-75 requests
-208 assertions aprobadas
-0 assertions fallidas
-```
+| Métrica | Resultado |
+|---|---:|
+| Requests ejecutadas | 75 |
+| Assertions aprobadas | 208 |
+| Assertions fallidas | 0 |
 
-Se verificaron operaciones CRUD, validaciones, manejo de errores, conflictos de integridad, filtros y relaciones entre recursos.
+Las pruebas incluyeron:
 
-## 13. Scripts disponibles
+- Operaciones CRUD.
+- Validaciones de entrada.
+- Manejo de errores HTTP.
+- Restricciones de integridad.
+- Conflictos de unicidad.
+- Relaciones entre entidades.
+- Búsquedas con filtros.
+- Cancelaciones de turnos.
+
+## 13. Scripts del proyecto
+
+Los scripts definidos en `package.json` son:
 
 | Comando | Descripción |
 |---|---|
-| `npm install` | Instalar dependencias |
-| `npm run dev` | Iniciar servidor con recarga automática |
-| `npm start` | Iniciar servidor normalmente |
-| `npm test` | Ejecutar los 41 tests automatizados |
-| `npm run db:reset` | Reinicializar esquema y datos de desarrollo, si está configurado |
+| `npm run dev` | Inicia el servidor con recarga automática |
+| `npm start` | Inicia el servidor sin recarga automática |
+| `npm run db:sync` | Sincroniza los modelos con PostgreSQL |
+| `npm run db:seed` | Carga las especialidades iniciales |
+| `npm run db:reset` | Recrea el esquema y carga los datos iniciales |
+| `npm test` | Ejecuta los 41 tests automatizados |
 
-**Precaución:** `db:reset` puede eliminar datos de la base configurada en el entorno. Verificá la conexión antes de ejecutarlo.
+### Scripts de base de datos
+
+**Sincronización:**
+
+```bash
+npm run db:sync
+```
+
+**Carga inicial:**
+
+```bash
+npm run db:seed
+```
+
+**Reinicialización destructiva:**
+
+```bash
+npm run db:reset
+```
+
+El último comando utiliza `--force` y elimina los registros de las tablas sincronizadas.
 
 ## 14. Estructura del proyecto
 
@@ -785,10 +911,12 @@ Hospital-API/
 │   │   └── appointment.model.js
 │   ├── dtos/
 │   ├── controllers/
-│   ├── services/
 │   ├── middlewares/
 │   ├── errors/
 │   └── routes/
+├── scripts/
+│   ├── db-sync.js
+│   └── db-seed.js
 ├── tests/
 │   ├── setup.js
 │   ├── health.test.js
@@ -796,8 +924,6 @@ Hospital-API/
 │   ├── doctors-nurses.test.js
 │   ├── appointments.test.js
 │   └── users.test.js
-├── .env
-├── .env.test
 ├── .env.example
 ├── .gitignore
 ├── docker-compose.yml
@@ -806,39 +932,50 @@ Hospital-API/
 └── README.md
 ```
 
-La organización permite separar responsabilidades y facilita el mantenimiento y las pruebas.
+Los archivos `.env` y `.env.test` se mantienen localmente y no deben incluirse en el repositorio.
 
 ## 15. Seguridad y buenas prácticas
 
-El proyecto implementa distintas medidas:
+El proyecto incorpora distintas prácticas:
 
-- Validación de datos de entrada mediante Yup.
-- DTOs para limitar los campos expuestos.
-- Contraseñas almacenadas mediante hashes de bcrypt.
-- Restricciones de integridad en PostgreSQL.
+- Validación de entrada mediante Yup.
+- Separación de responsabilidades por capas.
+- Uso de DTOs para controlar los datos expuestos.
+- Hash de contraseñas mediante bcrypt.
+- Restricciones de unicidad en PostgreSQL.
+- Relaciones con integridad referencial.
 - Manejo centralizado de errores.
-- Verificación de identificadores.
-- Rechazo de referencias inválidas.
-- Base independiente para testing.
+- Validación de identificadores y referencias.
+- Aislamiento de la base de testing.
 - Variables sensibles fuera del control de versiones.
 
-Los archivos `.env` y `.env.test` deben incluirse en `.gitignore`.
+### Consideración sobre los roles
 
-Se recomienda versionar únicamente archivos de ejemplo sin contraseñas reales.
+El proyecto incluye `ROLE_USER` y `ROLE_ADMIN` como parte del modelo de usuarios.
 
-El sistema implementa roles de usuario; sin embargo, los roles no deben interpretarse como un sistema completo de autorización hasta contar con controles de acceso en los endpoints.
+La existencia de roles no implica, por sí sola, que se haya implementado un sistema completo de autenticación y autorización.
+
+El control integral de permisos y acceso a endpoints puede ampliarse en futuras versiones.
+
+### Consideración sobre los turnos
+
+La restricción `UNIQUE (doctor_id, scheduled_at)` impide que un médico tenga dos turnos a la misma hora exacta.
+
+No garantiza por sí sola la ausencia de intervalos superpuestos, por ejemplo, turnos de 30 minutos a las 14:00 y 14:15.
+
+Esta validación constituye una posible mejora futura.
 
 ## 16. Problemas frecuentes
 
 ### PostgreSQL no responde
 
-Verificá que Docker Desktop esté abierto:
+Verificar el estado del contenedor:
 
 ```bash
 docker compose ps
 ```
 
-Si el contenedor no está activo:
+Iniciarlo si es necesario:
 
 ```bash
 docker compose up -d --wait
@@ -850,7 +987,9 @@ docker compose up -d --wait
 password authentication failed
 ```
 
-Verificá que `DB_USER` y `DB_PASSWORD` coincidan con las credenciales reales de PostgreSQL.
+Verificar que las credenciales de `.env` coincidan con las configuradas en PostgreSQL.
+
+Si el contenedor ya tenía un volumen inicializado, cambiar `DB_PASSWORD` en `.env` no modifica automáticamente la contraseña almacenada por PostgreSQL.
 
 ### Puerto ocupado
 
@@ -858,57 +997,61 @@ Verificá que `DB_USER` y `DB_PASSWORD` coincidan con las credenciales reales de
 port is already allocated
 ```
 
-Comprobá si otra instancia de PostgreSQL está utilizando el mismo puerto y ajustá la configuración si es necesario.
+Verificar si otro servicio está utilizando el puerto configurado.
 
-### Falta la base de testing
+### Base de testing inexistente
 
 ```text
 database "hospital_test" does not exist
 ```
 
-Creá `hospital_test` antes de ejecutar `npm test`.
+Crear la base `hospital_test` antes de ejecutar `npm test`.
 
-### Falta el tipo user_role
+### Tipo ENUM inexistente
 
 ```text
 type "user_role" does not exist
 ```
 
-El modelo de usuarios necesita el tipo ENUM `user_role`.
-
-En el entorno de testing, `tests/setup.js` prepara este tipo antes de sincronizar las tablas.
-
-En desarrollo, debe existir antes de crear la tabla correspondiente.
-
-### Falta el tipo appointment_status
+O:
 
 ```text
 type "appointment_status" does not exist
 ```
 
-Verificá que el tipo ENUM de estados de turnos esté creado antes de sincronizar el modelo Appointment.
+Verificar que el script de sincronización haya preparado los tipos ENUM antes de crear las tablas.
+
+### Tabla inexistente
+
+```text
+relation "patients" does not exist
+```
+
+Ejecutar:
+
+```bash
+npm run db:sync
+```
 
 ### Tests cancelados
-
-Si aparecen pruebas canceladas con:
 
 ```text
 test did not finish before its parent and was cancelled
 ```
 
-Revisá el error original del hook `before` o `beforeEach`.
+Revisar el error original del hook `before` o `beforeEach`.
 
-Una falla durante la preparación de PostgreSQL puede impedir que las pruebas lleguen a ejecutarse.
+Una falla al preparar la base puede provocar la cancelación de las pruebas dependientes.
 
 ### Swagger no carga
 
-Verificá que la API esté iniciada:
+Comprobar primero que la API responda:
 
 ```text
 http://localhost:3000/api/health
 ```
 
-Después revisá:
+Después acceder a:
 
 ```text
 http://localhost:3000/docs
@@ -916,37 +1059,42 @@ http://localhost:3000/docs
 
 ### openapi.yaml se descarga
 
-Es un comportamiento normal del navegador. El archivo YAML puede descargarse en lugar de mostrarse directamente.
+El navegador puede descargar el archivo YAML en lugar de mostrarlo directamente.
 
-## 17. Validación final del proyecto
+Esto es normal siempre que el archivo entregado contenga la especificación OpenAPI.
 
-El proyecto fue verificado mediante:
+## 17. Verificación final
+
+Se verificó el funcionamiento del proyecto mediante:
 
 - Instalación de dependencias con npm.
-- Ejecución de PostgreSQL mediante Docker.
-- Inicialización del esquema de base de datos.
-- Arranque de la API.
-- Prueba del endpoint Health.
+- Levantamiento de PostgreSQL mediante Docker Compose.
+- Sincronización de modelos con `npm run db:sync`.
+- Carga inicial de especialidades con `npm run db:seed`.
+- Inicio del servidor Express.
+- Consulta de `/api/health`.
 - Acceso a Swagger UI.
-- Acceso a la especificación OpenAPI.
-- Collection Runner de Postman.
-- Suite de 41 tests automatizados.
+- Entrega del archivo OpenAPI.
+- Ejecución de la colección de Postman con 208 assertions aprobadas.
+- Ejecución de la suite de 41 tests automatizados.
 
 ## 18. Objetivo académico
 
-Proyecto desarrollado como parte de la formación Full Stack Mentoring.
+Proyecto desarrollado como parte de **Full Stack Mentoring**, integrando los conocimientos adquiridos durante las Clases 7 y 8.
 
-El objetivo es aplicar de manera práctica:
+Se aplicaron conceptos de:
 
-- Diseño y desarrollo de APIs REST.
+- Desarrollo de APIs REST.
 - Arquitectura por capas.
-- Persistencia con bases de datos relacionales.
-- Modelado y asociaciones con Sequelize.
-- Validación y transformación de datos.
-- Manejo consistente de errores HTTP.
+- Persistencia de datos con PostgreSQL.
+- Modelado de entidades y relaciones.
+- Sequelize como ORM.
+- Validación mediante DTOs.
+- Manejo de errores HTTP.
 - Integridad referencial.
-- Documentación de APIs.
-- Testing manual y automatizado.
-- Reproducibilidad del entorno de desarrollo.
+- Documentación OpenAPI.
+- Pruebas manuales con Postman.
+- Testing automatizado con Node.js y Supertest.
+- Configuración de entornos reproducibles.
 
-El resultado es una API hospitalaria modular, documentada y probada, preparada para continuar incorporando nuevas funcionalidades.
+El resultado es una **API hospitalaria modular, documentada y probada**, preparada para incorporar nuevas funcionalidades en futuras etapas de desarrollo.
